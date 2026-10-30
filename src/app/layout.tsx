@@ -3,7 +3,7 @@ import Footer  from '@/components/Home/Footer';
 import Navbar from '@/components/Home/Navbar';
 
 export const metadata = {
-  title: "BookNook - A Cozy Online Library",
+  title: "BookNook",
   description: "Add a book, borrow a book, return a book.",
 };
 
