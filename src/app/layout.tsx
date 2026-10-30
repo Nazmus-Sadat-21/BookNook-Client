@@ -1,7 +1,6 @@
-
 import "@/app/globals.css";
-import Navbar from './../components/Home/Navbar';
-import Footer from './../components/Home/Footer';
+import Footer  from '@/components/Home/Footer';
+import Navbar from '@/components/Home/Navbar';
 
 export const metadata = {
   title: "BookNook - A Cozy Online Library",
@@ -14,7 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark"> {/* Toggle 'dark' class for default theme */}
+    // Cleaned up: Removed the inline comment from inside <html>
+    <html lang="en" className="dark">
       <body className="min-h-screen flex flex-col bg-[#faf8f5] dark:bg-[#181614] text-[#2d2a26] dark:text-[#f0eae1] font-serif transition-colors duration-300 antialiased">
         {/* Navbar at top */}
         <Navbar />
