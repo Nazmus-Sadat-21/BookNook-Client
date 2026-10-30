@@ -153,8 +153,8 @@ export default function Banner() {
           color: #faf8f5;
           background: rgba(24, 22, 20, 0.4);
           backdrop-filter: blur(4px);
-          width: 42px;
-          height: 42px;
+          width: 40px;
+          height: 40px;
           border-radius: 12px;
           border: 1px solid rgba(232, 226, 217, 0.2);
           transition: all 0.2s ease;
