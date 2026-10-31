@@ -1,57 +1,118 @@
 "use client";
 
-import React, { useState } from "react";
-import { User, Mail, Image as ImageIcon, Edit3, Save, X, Sparkles, BookOpen, BookmarkCheck, Library, ShieldCheck } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { User, Mail, Image as ImageIcon, Edit3, Save, X, Sparkles, Library, BookmarkCheck, ShieldCheck, Loader2 } from "lucide-react";
+import { authClient } from "@/lib/auth-client"; // Adjust your import path if needed
 
 export default function ProfilePage() {
-  // Initial user state
-  const [user, setUser] = useState({
-    name: "Alex Johnson",
-    email: "alex@booknook.lib",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=faces",
-    role: "Library Curator",
-    joinedDate: "October 2025",
-  });
+  const router = useRouter();
+  
+  // Fetch real session data
+  const { data: session, isPending, refetch } = authClient.useSession();
+  const currentUser = session?.user;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [tempName, setTempName] = useState(user.name);
-  const [tempAvatar, setTempAvatar] = useState(user.avatar);
+  const [tempName, setTempName] = useState("");
+  const [tempAvatar, setTempAvatar] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  // Sync state when session loads/updates
+  useEffect(() => {
+    if (currentUser) {
+      setTempName(currentUser.name || "");
+      setTempAvatar(currentUser.image || "");
+    }
+  }, [currentUser]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUser((prev) => ({
-      ...prev,
-      name: tempName,
-      avatar: tempAvatar || prev.avatar,
-    }));
-    setIsEditing(false);
-    setSuccessMessage("Profile updated successfully!");
-    setTimeout(() => setSuccessMessage(""), 4000);
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await authClient.updateUser({
+        name: tempName,
+        image: tempAvatar,
+      });
+
+      if (error) {
+        setErrorMessage(error.message || "Failed to update profile.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (data) {
+        await refetch(); // Refresh session data
+        setSuccessMessage("Profile updated successfully!");
+        setIsEditing(false);
+        setTimeout(() => setSuccessMessage(""), 4000);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || "An unexpected error occurred.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
-    setTempName(user.name);
-    setTempAvatar(user.avatar);
+    if (currentUser) {
+      setTempName(currentUser.name || "");
+      setTempAvatar(currentUser.image || "");
+    }
     setIsEditing(false);
+    setErrorMessage("");
   };
 
-  // Mock user stats
+  // Mock user stats (Replace or fetch from your database API as needed)
   const stats = [
     { label: "Books Added", value: "12", icon: Library },
     { label: "Active Borrows", value: "3", icon: BookmarkCheck },
     { label: "Reading Streak", value: "14 Days", icon: Sparkles },
   ];
 
+  if (isPending) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#8c6d46]" />
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
+        <h2 className="text-2xl font-serif font-bold text-[#2d2a26] dark:text-[#f0eae1] mb-2">Access Restricted</h2>
+        <p className="text-sm text-[#625b52] dark:text-[#a89f91] mb-4">Please log in to view and edit your profile.</p>
+        <button
+          onClick={() => router.push("/")}
+          className="px-5 py-2.5 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] text-sm font-medium shadow transition"
+        >
+          Return Home
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen  py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* Success Toast Notification */}
+        {/* Success Feedback Banner */}
         {successMessage && (
           <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 shadow-lg animate-fade-in">
             <Sparkles className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm font-medium">{successMessage}</span>
+          </div>
+        )}
+
+        {/* Error Feedback Banner */}
+        {errorMessage && (
+          <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 flex items-center gap-3 text-red-800 dark:text-red-300 shadow-lg animate-fade-in">
+            <span className="text-sm font-medium">{errorMessage}</span>
           </div>
         )}
 
@@ -61,10 +122,10 @@ export default function ProfilePage() {
           {/* Decorative Top Banner Pattern */}
           <div className="h-40 bg-gradient-to-r from-[#3e342a] via-[#5c4d3f] to-[#8c6d46] dark:from-[#141211] dark:via-[#221f1c] dark:to-[#3e342a] relative px-6 sm:px-10 pt-6 flex justify-between items-start">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/20 backdrop-blur-md text-[#f0eae1] text-xs font-medium tracking-wide">
-              <ShieldCheck className="h-3.5 w-3.5 text-[#d4a373]" /> {user.role}
+              <ShieldCheck className="h-3.5 w-3.5 text-[#d4a373]" /> Library Member
             </div>
             <span className="text-xs text-[#f0eae1]/80 font-serif italic hidden sm:inline">
-              Member since {user.joinedDate}
+              Account ID: {currentUser.id.slice(0, 8)}...
             </span>
           </div>
 
@@ -75,21 +136,18 @@ export default function ProfilePage() {
               <div className="flex flex-col sm:flex-row items-center sm:items-end gap-5 text-center sm:text-left">
                 <div className="relative group">
                   <img
-                    src={user.avatar}
-                    alt={user.name}
+                    src={currentUser.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=faces"}
+                    alt={currentUser.name || "User Avatar"}
                     className="h-32 w-32 rounded-3xl object-cover border-4 border-[#fdfcfa] dark:border-[#1c1a18] shadow-2xl"
                   />
-                  <div className="absolute inset-0 rounded-3xl bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium backdrop-blur-[2px]">
-                    Avatar
-                  </div>
                 </div>
 
                 <div className="space-y-1 pb-2">
                   <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#2d2a26] dark:text-[#f0eae1]">
-                    {user.name}
+                    {currentUser.name}
                   </h1>
                   <p className="text-xs sm:text-sm text-[#8c8275] dark:text-[#a89f91] flex items-center justify-center sm:justify-start gap-1.5">
-                    <Mail className="h-3.5 w-3.5" /> {user.email}
+                    <Mail className="h-3.5 w-3.5" /> {currentUser.email}
                   </p>
                 </div>
               </div>
@@ -160,9 +218,9 @@ export default function ProfilePage() {
                       <ImageIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-[#8c8275]" />
                       <input
                         type="url"
-                        required
                         value={tempAvatar}
                         onChange={(e) => setTempAvatar(e.target.value)}
+                        placeholder="https://example.com/avatar.jpg"
                         className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#1c1a18] text-sm text-[#2d2a26] dark:text-[#f0eae1] focus:outline-none focus:ring-2 focus:ring-[#8c6d46]/50 transition"
                       />
                     </div>
@@ -174,15 +232,18 @@ export default function ProfilePage() {
                   <button
                     type="button"
                     onClick={handleCancel}
+                    disabled={isSubmitting}
                     className="px-5 py-2.5 rounded-xl border border-[#e8e2d9] dark:border-[#2a2622] text-[#625b52] dark:text-[#a89f91] text-sm font-medium hover:bg-[#faf8f5] dark:hover:bg-[#1c1a18] transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <X className="h-4 w-4" /> Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] text-sm font-medium hover:opacity-95 shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                    disabled={isSubmitting}
+                    className="px-6 py-2.5 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] text-sm font-medium hover:opacity-95 shadow-md transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
-                    <Save className="h-4 w-4" /> Save Changes
+                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    <span>{isSubmitting ? "Saving..." : "Save Changes"}</span>
                   </button>
                 </div>
               </form>

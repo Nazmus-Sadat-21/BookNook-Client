@@ -328,7 +328,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BookOpen,
   PlusCircle,
@@ -344,15 +344,25 @@ import {
   Menu,
   X,
 } from "lucide-react";
-// Import your separate AuthDialog component
-import AuthDialog from '../../app/(auth)/AuthDialog';
+// Import your custom AuthDialog component
+
+// Import Better Auth client hook and signOut function
+import { authClient } from "@/lib/auth-client"; // Adjust path to your better-auth client setup
+import Image from "next/image";
+import AuthDialog from './../../app/(auth)/AuthDialog';
+
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
+  // Use Better Auth's useSession hook to fetch real session state
+  const { data: session, isPending } = authClient.useSession();
+  const isLoggedIn = !!session?.user;
+  const user = session?.user;
 
   // Sync theme with HTML document root
   useEffect(() => {
@@ -364,11 +374,17 @@ export default function Navbar() {
     }
   }, [isDarkMode]);
 
-  const mockUser = {
-    name: "Alex Johnson",
-    email: "alex@booknook.lib",
-    avatar:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces",
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          setIsProfileDropdownOpen(false);
+          setIsMobileMenuOpen(false);
+          router.push("/");
+          router.refresh();
+        },
+      },
+    });
   };
 
   const isActive = (path: string) => pathname === path;
@@ -436,23 +452,19 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* Simulation Auth Switcher */}
-          <button
-            onClick={() => setIsLoggedIn(!isLoggedIn)}
-            className="text-xs bg-[#e8e2d9] dark:bg-[#2d2924] text-[#625b52] dark:text-[#a89f91] px-2 py-1 rounded hover:opacity-80 transition"
-          >
-            {isLoggedIn ? "State: Logged In" : "State: Logged Out"}
-          </button>
-
-          {isLoggedIn ? (
+          {isPending ? (
+            <div className="h-9 w-20 animate-pulse bg-[#e8e2d9] dark:bg-[#2d2924] rounded-lg" />
+          ) : isLoggedIn && user ? (
             <div className="relative">
               <button
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                 className="flex items-center focus:outline-none rounded-full ring-2 ring-[#8c6d46]/30 dark:ring-[#d4a373]/30"
               >
-                <img
-                  src={mockUser.avatar}
-                  alt={mockUser.name}
+                <Image
+                  src={user.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces"}
+                  alt={user.name || "User Avatar"}
+                  height={40}
+                  width={40}
                   className="h-9 w-9 rounded-full object-cover border border-[#e8e2d9] dark:border-[#2d2924]"
                 />
               </button>
@@ -462,10 +474,10 @@ export default function Navbar() {
                 <div className="absolute right-0 mt-2 w-56 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#201d1a] p-2 shadow-lg z-50">
                   <div className="px-3 py-2 border-b border-[#e8e2d9] dark:border-[#2d2924] mb-1">
                     <p className="text-sm font-semibold text-[#2d2a26] dark:text-[#f0eae1]">
-                      {mockUser.name}
+                      {user.name}
                     </p>
                     <p className="text-xs text-[#8c8275] dark:text-[#8a8175] truncate">
-                      {mockUser.email}
+                      {user.email}
                     </p>
                   </div>
                   <Link
@@ -476,10 +488,7 @@ export default function Navbar() {
                     <User className="h-4 w-4" /> My Profile
                   </Link>
                   <button
-                    onClick={() => {
-                      setIsLoggedIn(false);
-                      setIsProfileDropdownOpen(false);
-                    }}
+                    onClick={handleSignOut}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition mt-1"
                   >
                     <LogOut className="h-4 w-4" /> Logout
@@ -489,7 +498,6 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              {/* Uses your separate AuthDialog component for Login */}
               <AuthDialog
                 mode="login"
                 triggerButton={
@@ -498,8 +506,6 @@ export default function Navbar() {
                   </button>
                 }
               />
-
-              {/* Uses your separate AuthDialog component for Register */}
               <AuthDialog
                 mode="register"
                 triggerButton={
@@ -540,19 +546,21 @@ export default function Navbar() {
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
         <div className="md:hidden border-b border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#181614] px-4 pt-3 pb-6 space-y-3">
-          {isLoggedIn && (
+          {isLoggedIn && user && (
             <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-[#f2ede4] dark:bg-[#23201d] border border-[#e8e2d9] dark:border-[#2d2924]">
-              <img
-                src={mockUser.avatar}
-                alt={mockUser.name}
+              <Image
+                src={user.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces"}
+                alt={user.name || "Avatar"}
+                height={40}
+                width={40}
                 className="h-10 w-10 rounded-full object-cover border border-[#e8e2d9] dark:border-[#2d2924]"
               />
               <div className="overflow-hidden">
                 <p className="text-sm font-semibold text-[#2d2a26] dark:text-[#f0eae1] truncate">
-                  {mockUser.name}
+                  {user.name}
                 </p>
                 <p className="text-xs text-[#8c8275] dark:text-[#8a8175] truncate">
-                  {mockUser.email}
+                  {user.email}
                 </p>
               </div>
             </div>
@@ -608,15 +616,6 @@ export default function Navbar() {
           </div>
 
           <div className="pt-3 border-t border-[#e8e2d9] dark:border-[#2d2924] flex flex-col gap-2">
-            <button
-              onClick={() => setIsLoggedIn(!isLoggedIn)}
-              className="text-xs bg-[#e8e2d9] dark:bg-[#2d2924] text-[#625b52] dark:text-[#a89f91] px-2 py-1.5 rounded"
-            >
-              {isLoggedIn
-                ? "Simulate: Switch to Logged Out"
-                : "Simulate: Switch to Logged In"}
-            </button>
-
             {!isLoggedIn ? (
               <div className="grid grid-cols-2 gap-2 text-center text-sm pt-1">
                 <AuthDialog
@@ -644,10 +643,7 @@ export default function Navbar() {
               </div>
             ) : (
               <button
-                onClick={() => {
-                  setIsLoggedIn(false);
-                  setIsMobileMenuOpen(false);
-                }}
+                onClick={handleSignOut}
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 font-medium transition"
               >
                 <LogOut className="h-4 w-4" /> Logout
@@ -659,4 +655,3 @@ export default function Navbar() {
     </header>
   );
 }
-

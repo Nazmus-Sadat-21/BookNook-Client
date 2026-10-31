@@ -3,7 +3,7 @@ import Footer  from '@/components/Home/Footer';
 import Navbar from '@/components/Home/Navbar';
 
 export const metadata = {
-  title: "BookNook",
+  title: "BookNook - A Cozy Online Library",
   description: "Add a book, borrow a book, return a book.",
 };
 
@@ -13,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    // Cleaned up: Removed the inline comment from inside <html>
-    <html lang="en" className="dark">
+    // Add suppressHydrationWarning here to prevent browser extension attribute mismatches
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col bg-[#faf8f5] dark:bg-[#181614] text-[#2d2a26] dark:text-[#f0eae1] font-serif transition-colors duration-300 antialiased">
         {/* Navbar at top */}
         <Navbar />

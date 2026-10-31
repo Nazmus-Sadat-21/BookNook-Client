@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { BookOpen, Mail, Lock, User, Image as ImageIcon, LogIn, UserPlus, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { signIn, signUp } from "@/lib/auth-client"; // Adjust your import path as needed
 
 interface AuthDialogProps {
   mode: "login" | "register";
@@ -16,6 +18,7 @@ interface AuthDialogProps {
 }
 
 export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(mode === "login");
 
@@ -30,51 +33,110 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
   const [showRepassword, setShowRepassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Validation rules for register
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasMinLength = password.length >= 6;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
+    setLoading(true);
 
-    if (isLogin) {
-      if (!email || !password) {
-        setErrorMessage("Please fill in all required fields.");
-        return;
+    try {
+      if (isLogin) {
+        if (!email || !password) {
+          setErrorMessage("Please fill in all required fields.");
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await signIn.email({
+          email,
+          password,
+        });
+
+        if (error) {
+          setErrorMessage(error.message || "Failed to log in.");
+          setLoading(false);
+          return;
+        }
+
+        if (data) {
+          setSuccessMessage("Login successful! Welcome back.");
+          setTimeout(() => {
+            setIsOpen(false);
+            setSuccessMessage("");
+            router.refresh();
+            router.push("/");
+           
+          }, 1200);
+        }
+      } else {
+        // Register Mode
+        if (!name || !email || !password || !repassword) {
+          setErrorMessage("Please fill in all required fields.");
+          setLoading(false);
+          return;
+        }
+        if (!hasUppercase || !hasLowercase || !hasMinLength) {
+          setErrorMessage("Please fix password validation requirements.");
+          setLoading(false);
+          return;
+        }
+        if (password !== repassword) {
+          setErrorMessage("Passwords do not match.");
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await signUp.email({
+          email,
+          password,
+          name,
+          image: photoURL || undefined,
+        });
+
+        if (error) {
+          setErrorMessage(error.message || "Failed to create account.");
+          setLoading(false);
+          return;
+        }
+
+        if (data) {
+          setSuccessMessage("Account created successfully!");
+          setTimeout(() => {
+            setIsOpen(false);
+            setSuccessMessage("");
+            router.refresh();
+            router.push("/");
+            
+          }, 1200);
+        }
       }
-      setSuccessMessage("Login successful! Welcome back.");
-    } else {
-      if (!name || !email || !password || !repassword) {
-        setErrorMessage("Please fill in all required fields.");
-        return;
-      }
-      if (!hasUppercase || !hasLowercase || !hasMinLength) {
-        setErrorMessage("Please fix password validation requirements.");
-        return;
-      }
-      if (password !== repassword) {
-        setErrorMessage("Passwords do not match.");
-        return;
-      }
-      setSuccessMessage("Account created successfully!");
+    } catch (err:unknown) {
+      setErrorMessage(err?.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
-
-    setTimeout(() => {
-      setIsOpen(false);
-      setSuccessMessage("");
-    }, 1200);
   };
 
-  const handleGoogleAuth = () => {
-    setSuccessMessage("Authenticating with Google...");
-    setTimeout(() => {
-      setIsOpen(false);
+  const handleGoogle = async () => {
+    try {
+      setErrorMessage("");
+      setSuccessMessage("Redirecting to Google...");
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch (error: unknown) {
+      console.error("Google sign-in failed:", error);
       setSuccessMessage("");
-    }, 1200);
+      setErrorMessage("Google sign-in failed. Please try again.");
+    }
   };
 
   return (
@@ -143,7 +205,7 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
 
           {!isLogin && (
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-[#2d2a26] dark:text-[#f0eae1] uppercase tracking-wider">Photo URL</label>
+              <label className="text-xs font-semibold text-[#2d2a26] dark:text-[#f0eae1] uppercase tracking-wider">Photo URL (Optional)</label>
               <div className="relative">
                 <ImageIcon className="absolute left-3.5 top-3 h-4 w-4 text-[#8c8275]" />
                 <input
@@ -212,10 +274,11 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
 
           <button
             type="submit"
-            className="w-full mt-1 py-2.5 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] font-medium text-sm hover:opacity-95 shadow transition flex items-center justify-center gap-2"
+            disabled={loading}
+            className="w-full mt-2 py-3 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] font-medium text-sm hover:opacity-95 shadow transition flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {isLogin ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-            <span>{isLogin ? "Login to Library" : "Create Account"}</span>
+            <span>{loading ? "Processing..." : isLogin ? "Login to Library" : "Create Account"}</span>
           </button>
         </form>
 
@@ -227,7 +290,7 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
 
         {/* Google Authentication Button */}
         <button
-          onClick={handleGoogleAuth}
+          onClick={handleGoogle}
           type="button"
           className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#fdfcfa] dark:bg-[#1c1917] text-sm font-medium text-[#2d2a26] dark:text-[#f0eae1] hover:bg-[#f2ede4] transition shadow-sm"
         >

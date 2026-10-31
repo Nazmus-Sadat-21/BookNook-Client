@@ -6,7 +6,7 @@ import { BookOpen, Home, Library, Compass, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-[85vh] bg-[#faf8f5] dark:bg-[#151312] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 transition-colors duration-300 relative overflow-hidden">
+    <div className="min-h-[85vh] bg-[#f4efe6] dark:bg-[#151312] border border-[#e8e2d9] dark:border-[#2d2924] rounded-2xl flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 transition-colors duration-300 relative overflow-hidden">
       
       {/* Decorative Ambient Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-[#d4a373]/15 dark:bg-[#d4a373]/5 blur-3xl pointer-events-none" />

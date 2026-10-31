@@ -145,7 +145,7 @@ export default function AddBookPage() {
     "block text-xs font-bold text-[#625b52] dark:text-[#a89f91] mb-1";
 
   return (
-    <main className="min-h-screen py-6 sm:py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+    <main className="min-h-screen  py-6 sm:py-8 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
       {/* Success notification */}
       {toast && (
         <div
