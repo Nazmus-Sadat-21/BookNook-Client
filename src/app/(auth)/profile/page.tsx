@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, Mail, Image as ImageIcon, Edit3, Save, X, Sparkles, Library, BookmarkCheck, ShieldCheck, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client"; // Adjust your import path if needed
+import Image from "next/image";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -18,6 +19,12 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Helper function to get the first character of the username safely
+  const getInitial = (name?: string | null) => {
+    if (!name) return "U";
+    return name.charAt(0).toUpperCase();
+  };
 
   // Sync state when session loads/updates
   useEffect(() => {
@@ -89,7 +96,7 @@ export default function ProfilePage() {
         <p className="text-sm text-[#625b52] dark:text-[#a89f91] mb-4">Please log in to view and edit your profile.</p>
         <button
           onClick={() => router.push("/")}
-          className="px-5 py-2.5 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] text-sm font-medium shadow transition"
+          className="px-5 py-2.5 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] text-sm font-medium shadow transition cursor-pointer"
         >
           Return Home
         </button>
@@ -135,11 +142,19 @@ export default function ProfilePage() {
               {/* Avatar & Basic Info */}
               <div className="flex flex-col sm:flex-row items-center sm:items-end gap-5 text-center sm:text-left">
                 <div className="relative group">
-                  <img
-                    src={currentUser.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=faces"}
-                    alt={currentUser.name || "User Avatar"}
-                    className="h-32 w-32 rounded-3xl object-cover border-4 border-[#fdfcfa] dark:border-[#1c1a18] shadow-2xl"
-                  />
+                  {currentUser.image ? (
+                    <Image
+                      src={currentUser.image}
+                      alt={currentUser.name || "User Avatar"}
+                      width={128}
+                      height={128}
+                      className="h-32 w-32 rounded-3xl object-cover border-4 border-[#fdfcfa] dark:border-[#1c1a18] shadow-2xl"
+                    />
+                  ) : (
+                    <div className="h-32 w-32 rounded-3xl bg-[#8c6d46] text-[#faf8f5] dark:bg-[#d4a373] dark:text-[#181614] flex items-center justify-center font-serif font-bold text-4xl border-4 border-[#fdfcfa] dark:border-[#1c1a18] shadow-2xl">
+                      {getInitial(currentUser.name)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1 pb-2">

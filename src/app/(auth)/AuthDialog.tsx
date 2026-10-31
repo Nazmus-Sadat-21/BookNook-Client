@@ -10,14 +10,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { BookOpen, Mail, Lock, User, Image as ImageIcon, LogIn, UserPlus, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
-import { signIn, signUp } from "@/lib/auth-client"; // Adjust your import path as needed
+import { signIn, signUp } from "@/lib/auth-client";
 
 interface AuthDialogProps {
   mode: "login" | "register";
   triggerButton: React.ReactNode;
+  triggerClassName?: string;
 }
 
-export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
+export default function AuthDialog({ mode, triggerButton, triggerClassName }: AuthDialogProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(mode === "login");
@@ -71,9 +72,10 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
             setIsOpen(false);
             setSuccessMessage("");
             router.refresh();
-            router.push("/");
-           
-          }, 1200);
+            //router.push("/");
+            
+            window.location.href = "/";
+          }, 1000);
         }
       } else {
         // Register Mode
@@ -112,12 +114,13 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
             setIsOpen(false);
             setSuccessMessage("");
             router.refresh();
-            router.push("/");
+            //router.push("/");
             
-          }, 1200);
+            window.location.href = "/";
+          }, 1000);
         }
       }
-    } catch (err:unknown) {
+    } catch (err: any) {
       setErrorMessage(err?.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
@@ -132,7 +135,7 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
         provider: "google",
         callbackURL: "/",
       });
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error("Google sign-in failed:", error);
       setSuccessMessage("");
       setErrorMessage("Google sign-in failed. Please try again.");
@@ -141,7 +144,7 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+      <DialogTrigger className={triggerClassName || "inline-flex items-center gap-1 cursor-pointer"}>
         {triggerButton}
       </DialogTrigger>
 
@@ -275,7 +278,7 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] font-medium text-sm hover:opacity-95 shadow transition flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full mt-2 py-3 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] font-medium text-sm hover:opacity-95 shadow transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
           >
             {isLogin ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
             <span>{loading ? "Processing..." : isLogin ? "Login to Library" : "Create Account"}</span>
@@ -292,7 +295,7 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
         <button
           onClick={handleGoogle}
           type="button"
-          className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#fdfcfa] dark:bg-[#1c1917] text-sm font-medium text-[#2d2a26] dark:text-[#f0eae1] hover:bg-[#f2ede4] transition shadow-sm"
+          className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#fdfcfa] dark:bg-[#1c1917] text-sm font-medium text-[#2d2a26] dark:text-[#f0eae1] hover:bg-[#f2ede4] transition shadow-sm cursor-pointer"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -307,14 +310,14 @@ export default function AuthDialog({ mode, triggerButton }: AuthDialogProps) {
           {isLogin ? (
             <p>
               Don&apos;t have an account?{" "}
-              <button type="button" onClick={() => setIsLogin(false)} className="font-semibold text-[#8c6d46] dark:text-[#d4a373] hover:underline">
+              <button type="button" onClick={() => setIsLogin(false)} className="font-semibold text-[#8c6d46] dark:text-[#d4a373] hover:underline cursor-pointer">
                 Register here
               </button>
             </p>
           ) : (
             <p>
               Already have an account?{" "}
-              <button type="button" onClick={() => setIsLogin(true)} className="font-semibold text-[#8c6d46] dark:text-[#d4a373] hover:underline">
+              <button type="button" onClick={() => setIsLogin(true)} className="font-semibold text-[#8c6d46] dark:text-[#d4a373] hover:underline cursor-pointer">
                 Login here
               </button>
             </p>
