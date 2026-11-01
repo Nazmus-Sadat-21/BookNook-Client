@@ -84,10 +84,69 @@ export default function AddBookPage() {
   const progress = (doneCount / required.length) * 100;
   const missing = required.filter((r) => !r.done).map((r) => r.label);
 
+  // const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  //   event.preventDefault();
+
+  //   if (!coverPreview) {
+  //     setCoverError("Add a cover image before publishing.");
+  //     fileInputRef.current?.focus();
+  //     return;
+  //   }
+
+  //   setSubmitError("");
+  //   setIsSubmitting(true);
+
+  //   try {
+  //     const res = await fetch(`http://localhost:8000/add-book`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         title,
+  //         author,
+  //         category,
+  //         copies,
+  //         description,
+  //         coverImage: coverPreview, // or uploaded image URL
+  //         contributorName: loggedInUser?.name,
+  //         contributorEmail: loggedInUser?.email,
+  //         createdAt: new Date().toISOString(), // Current date & time stamp
+  //       }),
+  //     });
+
+  //     const result = await res.json();
+  //     console.log(result);
+
+  //     if (!res.ok) {
+  //       throw new Error("The server could not save this book.");
+  //     }
+
+  //     setToast(`\u201c${title.trim()}\u201d is now part of the collection.`);
+  //     setTitle("");
+  //     setAuthor("");
+  //     setCategory("Fiction");
+  //     setCopies(1);
+  //     setDescription("");
+  //     removeCover();
+  //     window.scrollTo({ top: 0, behavior: "smooth" });
+  //     setTimeout(() => setToast(null), 4500);
+  //   } catch (error) {
+  //     setSubmitError(
+  //       error instanceof Error
+  //         ? error.message
+  //         : "Something went wrong. Please try again."
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!coverPreview) {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
       setCoverError("Add a cover image before publishing.");
       fileInputRef.current?.focus();
       return;
@@ -97,6 +156,26 @@ export default function AddBookPage() {
     setIsSubmitting(true);
 
     try {
+      // 1. Upload the image file to ImgBB to get a permanent URL
+      const imageFormData = new FormData();
+      imageFormData.append("image", file);
+
+      // Replace with your ImgBB API key or use an environment variable (e.g., process.env.NEXT_PUBLIC_IMGBB_API_KEY)
+      const IMGBB_API_KEY = "5e6efab626b697566595ba9c2775d4b0"; 
+      
+      const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: imageFormData,
+      });
+
+      const imgData = await imgRes.json();
+      if (!imgData.success) {
+        throw new Error("Failed to upload cover image to hosting service.");
+      }
+
+      const permanentImageUrl = imgData.data.url;
+
+      // 2. Send the permanent image URL and book data to your backend
       const res = await fetch(`http://localhost:8000/add-book`, {
         method: "POST",
         headers: {
@@ -108,18 +187,17 @@ export default function AddBookPage() {
           category,
           copies,
           description,
-          coverImage: coverPreview, // or uploaded image URL
+          coverImage: permanentImageUrl, // Saved permanently instead of blob:
           contributorName: loggedInUser?.name,
           contributorEmail: loggedInUser?.email,
-          createdAt: new Date().toISOString(), // Current date & time stamp
+          createdAt: new Date().toISOString(),
         }),
       });
 
       const result = await res.json();
-      console.log(result);
 
       if (!res.ok) {
-        throw new Error("The server could not save this book.");
+        throw new Error(result.message || "The server could not save this book.");
       }
 
       setToast(`\u201c${title.trim()}\u201d is now part of the collection.`);
@@ -141,7 +219,6 @@ export default function AddBookPage() {
       setIsSubmitting(false);
     }
   };
-
   const inputBase =
     "w-full px-4 py-3.5 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#141211] text-sm text-[#2d2a26] dark:text-[#f0eae1] placeholder:text-[#8c8275]/70 focus:outline-none focus:ring-2 focus:ring-[#8c6d46]/50 transition";
 
