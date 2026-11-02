@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -98,34 +98,58 @@ function MembersOnly({ onHome }: { onHome: () => void }) {
 export default function MyBooksPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-  const loggedInUser = session?.user;
 
-  const [books, setBooks] = useState([]);
-  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
+  const loggedInUser = session?.user;
+  const [books, setBooks] = useState<ComponentProps<typeof MyBooksClient>["initialBooks"]>([]);
+  const [loadedBooksForEmail, setLoadedBooksForEmail] = useState<string | null>(null);
+  const isLoadingBooks = Boolean(
+    loggedInUser?.email && loadedBooksForEmail !== loggedInUser.email
+  );
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchUserBooks() {
-      if (!loggedInUser?.email) return;
+      if (!loggedInUser?.email) {
+        return;
+      }
 
       try {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        const { data: tokenData } = await authClient.token();
+        const token = tokenData?.token;
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_SERVER_API}/my-books/${encodeURIComponent(loggedInUser.email)}`,
-          { cache: "no-store" }
+          {
+            method: "GET",
+            headers,
+            cache: "no-store",
+          }
         );
+
         if (res.ok) {
           const data = await res.json();
-          setBooks(data);
+          if (!cancelled) setBooks(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         console.error("Failed to fetch user books:", error);
       } finally {
-        setIsLoadingBooks(false);
+        if (!cancelled) setLoadedBooksForEmail(loggedInUser.email);
       }
     }
 
-    if (loggedInUser) {
-      fetchUserBooks();
-    }
+    fetchUserBooks();
+
+    return () => {
+      cancelled = true;
+    };
   }, [loggedInUser]);
 
   if (isPending || (loggedInUser && isLoadingBooks)) return <ShelfLoader />;

@@ -150,16 +150,18 @@ export default function ProfilePage() {
   // Sync state and fetch real stats when user session is available
   useEffect(() => {
     if (currentUser) {
-      setTempName(currentUser.name || "");
-      setTempAvatar(currentUser.image || "");
-
       async function fetchUserStats() {
         if (!currentUser?.email) return;
 
         try {
           // Fetch books added by user
-          const booksRes = await fetch(`http://localhost:8000/my-books/${currentUser.email}`, {
+            const {data:tokenData} = await authClient.token()
+            const token = tokenData?.token
+          const booksRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-books/${currentUser.email}`, {
             cache: "no-store",
+            headers:{
+              authorization : `Bearer ${token}`
+            }
           });
           if (booksRes.ok) {
             const booksData = await booksRes.json();
@@ -167,8 +169,11 @@ export default function ProfilePage() {
           }
 
           // Fetch active borrows by user
-          const borrowsRes = await fetch(`http://localhost:8000/my-borrows/${currentUser.email}`, {
+          const borrowsRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-borrows/${currentUser.email}`, {
             cache: "no-store",
+            headers:{
+              authorization : `Bearer ${token}`
+            }
           });
           if (borrowsRes.ok) {
             const borrowsData = await borrowsRes.json();
@@ -410,6 +415,8 @@ export default function ProfilePage() {
                   <Button
                     type="button"
                     onClick={() => {
+                      setTempName(currentUser.name || "");
+                      setTempAvatar(currentUser.image || "");
                       setSuccessMessage("");
                       setIsEditing(true);
                     }}

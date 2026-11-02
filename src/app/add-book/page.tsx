@@ -214,10 +214,12 @@ export default function AddBookPage() {
       }
       const permanentImageUrl = imgData.data.url;
 
+      const {data:tokenData} = await authClient.token()
+      const token = tokenData?.token
       // 2. Save the book with the permanent image URL
       const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/add-book`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${token}` },
         body: JSON.stringify({
           title,
           author,

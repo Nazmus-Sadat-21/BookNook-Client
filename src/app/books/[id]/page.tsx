@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, ShieldCheck, User, Calendar, Tag, Layers } from "lucide-react";
 import BorrowModal from "@/components/Shared/BorrowBooksModal";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 interface BookDetailPageProps {
   params: Promise<{ id: string }>;
@@ -29,10 +31,17 @@ const TICK_HEIGHTS = [26, 21, 26, 23, 25];
 export default async function BookDetailPage({ params }: BookDetailPageProps) {
   const { id } = await params;
 
+  const jwtToken = await auth.api.getToken({
+    headers : await headers()
+  })
+
   let book = null;
 
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/books/${id}`, {
+      headers:{
+        authorization: `Bearer ${jwtToken?.token}`,
+      },
       cache: "no-store",
     });
 

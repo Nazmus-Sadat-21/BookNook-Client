@@ -23,6 +23,7 @@ import Image from "next/image";
 
 import AuthDialog from '../../app/(auth)/sign-in-up/page';
 
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -40,6 +41,37 @@ export default function Navbar() {
   const { data: session, isPending } = authClient.useSession();
   const isLoggedIn = !!session?.user;
   const user = session?.user;
+
+  // Dynamic document title update based on current route pathname
+  useEffect(() => {
+    switch (pathname) {
+      case "/":
+        document.title = "BookNook | Home";
+        break;
+      case "/books":
+        document.title = "BookNook | All Books";
+        break;
+      case "/add-book":
+        document.title = "BookNook | Add Book";
+        break;
+      case "/my-books":
+        document.title = "BookNook | My Books";
+        break;
+      case "/my-borrows":
+        document.title = "BookNook | My Borrows";
+        break;
+      case "/profile":
+        document.title = "BookNook | My Profile";
+        break;
+      default:
+        if (pathname.startsWith("/books/")) {
+          document.title = "BookNook | Book Details";
+        } else {
+          document.title = "BookNook";
+        }
+        break;
+    }
+  }, [pathname]);
 
   // Helper function to get the first character of the username safely
   const getInitial = (name?: string | null) => {

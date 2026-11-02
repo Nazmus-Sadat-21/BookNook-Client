@@ -205,9 +205,16 @@ export default function MyBorrowsPage() {
       if (!loggedInUser?.email) return;
 
       try {
+         const { data: tokenData } = await authClient.token();
+        const token = tokenData?.token;
+                
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_SERVER_API}/my-borrows/${encodeURIComponent(loggedInUser.email)}`,
-          { cache: "no-store" }
+          { cache: "no-store",
+            headers : {
+              authorization: `Bearer ${token}`
+            }
+           }
         );
         if (res.ok) {
           const data = await res.json();
@@ -234,8 +241,13 @@ export default function MyBorrowsPage() {
     try {
       setError(null);
       setReturningId(borrow._id);
-      const res = await fetch(`http://localhost:8000/borrows/${borrow._id}`, {
+      const {data:tokenData} = await authClient.token()
+      const token = tokenData?.token
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/borrows/${borrow._id}`, {
         method: "DELETE",
+        headers:{
+          authorization : `Bearer ${token}`
+        }
       });
 
       if (!res.ok) {

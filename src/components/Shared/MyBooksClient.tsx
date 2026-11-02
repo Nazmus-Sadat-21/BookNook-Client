@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, Loader2, Pencil, Trash2 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 interface Book {
   _id: string;
@@ -171,7 +172,7 @@ export default function MyBooksClient({
         const imageFormData = new FormData();
         imageFormData.append("image", selectedEditFile);
 
-      const IMGBB_API_KEY = `${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`;
+        const IMGBB_API_KEY = `${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`;
 
         const imgRes = await fetch(
           `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
@@ -185,10 +186,11 @@ export default function MyBooksClient({
       }
 
       const updatedPayload = { ...editingBook, coverImage: finalCoverUrl };
-
-      const res = await fetch(`http://localhost:8000/books/${editingBook._id}`, {
+      const { data: tokenData } = await authClient.token();
+      const token = tokenData?.token;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/books/${editingBook._id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${token}` },
         body: JSON.stringify(updatedPayload),
       });
       const data = await res.json();
@@ -211,8 +213,13 @@ export default function MyBooksClient({
     setIsDeleting(true);
     setError(null);
     try {
+      const { data: tokenData } = await authClient.token();
+      const token = tokenData?.token;
       const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/books/${bookToDelete._id}`, {
         method: "DELETE",
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
       });
       if (!res.ok) throw new Error("The book could not be deleted. Please try again.");
 
@@ -488,6 +495,19 @@ export default function MyBooksClient({
                   className={fieldInput}
                 />
               </div>
+            </div>
+
+            {/* Description / Synopsis */}
+            <div>
+              <label htmlFor="edit-book-description" className={fieldLabel}>Description / Synopsis</label>
+              <textarea
+                id="edit-book-description"
+                rows={3}
+                value={editingBook.description || ""}
+                onChange={(e) => setEditingBook({ ...editingBook, description: e.target.value })}
+                placeholder="Enter a brief synopsis or description..."
+                className={`${fieldInput} resize-none py-2`}
+              />
             </div>
 
             {/* Cover */}

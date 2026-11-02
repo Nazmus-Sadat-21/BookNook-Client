@@ -66,8 +66,13 @@ export default function BorrowModal({ book, cloth, foil }: BorrowModalProps) {
       }
 
       try {
+        const {data:tokenData} = await authClient.token()
+      const token = tokenData?.token
         const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-borrows/${currentUser.email}`, {
           cache: "no-store",
+          headers : {
+            authorization : `Bearer ${token}`
+          }
         });
         if (res.ok) {
           const borrowedBooks = await res.json();
@@ -108,9 +113,13 @@ export default function BorrowModal({ book, cloth, foil }: BorrowModalProps) {
     };
 
     try {
+      const {data:tokenData} = await authClient.token()
+      const token = tokenData?.token
       const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/add-borrows`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          authorization : `Bearer ${token}`
+       },
         body: JSON.stringify(borrowPayload),
       });
 
@@ -127,8 +136,10 @@ export default function BorrowModal({ book, cloth, foil }: BorrowModalProps) {
         setSuccessMessage("");
         router.refresh();
       }, 2000);
-    } catch (error: any) {
-      setErrorMessage(error.message || "Something went wrong. Please try again.");
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Something went wrong. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
