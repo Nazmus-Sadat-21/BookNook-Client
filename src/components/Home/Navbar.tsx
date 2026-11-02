@@ -17,6 +17,7 @@ import {
   Moon,
   Menu,
   X,
+  Check, // Added for the toast icon
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
@@ -34,6 +35,9 @@ export default function Navbar() {
   // Controlled state for AuthDialog
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
+
+  // State for success toast message
+  const [toast, setToast] = useState<string | null>(null);
 
   const { data: session, isPending } = authClient.useSession();
   const isLoggedIn = !!session?.user;
@@ -90,6 +94,11 @@ export default function Navbar() {
         onSuccess: () => {
           setIsProfileDropdownOpen(false);
           setIsMobileMenuOpen(false);
+          
+          // Show logout success toast message
+          setToast("Logout successful");
+          setTimeout(() => setToast(null), 4000);
+
           router.push("/");
           router.refresh();
         },
@@ -110,6 +119,18 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5]/90 dark:bg-[#181614]/90 backdrop-blur-md transition-colors duration-300">
+      
+      {/* Toast Notification Banner */}
+      {toast && (
+        <div
+          role="status"
+          className="fixed inset-x-4 bottom-6 z-[60] mx-auto flex max-w-md items-center gap-3 rounded-[4px] bg-[#3e342a] px-5 py-3.5 text-sm text-[#faf8f5] shadow-2xl dark:bg-[#d4a373] dark:text-[#181614] transition-all animate-fade-in"
+        >
+          <Check className="h-4 w-4 shrink-0 text-[#d4a373] dark:text-[#3e342a]" />
+          <p>{toast}</p>
+        </div>
+      )}
+
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Logo & Brand Name */}

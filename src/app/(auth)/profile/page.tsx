@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Pencil } from "lucide-react";
+import { Check, Loader2, Pencil, ShieldCheck, BookOpen, BookmarkCheck } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 const FOIL = "#e9d9ab";
+
+const ruledInput =
+  "h-11 rounded-[6px] border border-stone-300 bg-stone-50/50 px-3.5 text-[15px] text-[#2d2a26] shadow-inner placeholder:text-stone-400 focus-visible:border-[#8c6d46] focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-[#8c6d46] dark:border-stone-700 dark:bg-stone-950/50 dark:text-[#f0eae1] dark:placeholder:text-stone-500 dark:focus-visible:border-[#d4a373]";
+
+const fieldLabel = "text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400";
+
+/* ───────── gates ───────── */
 
 const LOADER_SPINES = [
   { h: 52, c: "#6b4f33" },
@@ -19,13 +26,6 @@ const LOADER_SPINES = [
   { h: 54, c: "#7a5c3a" },
   { h: 42, c: "#8c6d46" },
 ];
-
-const ruledInput =
-  "h-10 rounded-none border-0 border-b border-stone-300 bg-transparent px-0 text-[15px] text-[#2d2a26] shadow-none placeholder:text-stone-400 focus-visible:border-[#8c6d46] focus-visible:shadow-[0_1px_0_0_#8c6d46] focus-visible:ring-0 dark:border-stone-600 dark:bg-transparent dark:text-[#f0eae1] dark:placeholder:text-stone-500 dark:focus-visible:border-[#d4a373] dark:focus-visible:shadow-[0_1px_0_0_#d4a373]";
-
-const fieldLabel = "text-sm font-normal text-stone-500 dark:text-stone-400";
-
-/* ───────── gates ───────── */
 
 function ShelfLoader() {
   return (
@@ -56,7 +56,7 @@ function MembersOnly({ onHome }: { onHome: () => void }) {
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
       <section
         aria-labelledby="members-only-title"
-        className="relative w-full max-w-md rounded-[4px] border border-stone-300 bg-white px-7 pb-9 pt-5 shadow-[0_2px_0_rgba(0,0,0,.04),0_22px_36px_-24px_rgba(0,0,0,.4)] dark:border-stone-700 dark:bg-stone-900 sm:px-9"
+        className="relative w-full max-w-md rounded-[6px] border border-stone-300 bg-white px-7 pb-9 pt-5 shadow-[0_2px_0_rgba(0,0,0,.04),0_22px_36px_-24px_rgba(0,0,0,.4)] dark:border-stone-700 dark:bg-stone-900 sm:px-9"
       >
         <div className="flex items-baseline justify-between gap-4 border-b-2 border-[#b4473f]/70 pb-2">
           <p
@@ -88,7 +88,7 @@ function MembersOnly({ onHome }: { onHome: () => void }) {
         <Button
           type="button"
           onClick={onHome}
-          className="mt-7 h-11 cursor-pointer rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a] hover:brightness-125 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]"
+          className="mt-7 h-11 cursor-pointer rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a]/90 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]/90"
         >
           Return home
         </Button>
@@ -102,8 +102,6 @@ function MembersOnly({ onHome }: { onHome: () => void }) {
   );
 }
 
-/* ───────── small pieces ───────── */
-
 function DetailRow({
   label,
   children,
@@ -112,11 +110,11 @@ function DetailRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-baseline gap-2 py-2.5">
-      <dt className="shrink-0 text-sm text-stone-500 dark:text-stone-400">{label}</dt>
+    <div className="flex items-baseline gap-2 py-3 border-b border-stone-100 dark:border-stone-800/60 last:border-0">
+      <dt className="shrink-0 text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">{label}</dt>
       <span
         aria-hidden
-        className="min-w-4 flex-1 -translate-y-[3px] border-b border-dotted border-stone-300 dark:border-stone-600"
+        className="min-w-4 flex-1 -translate-y-[3px] border-b border-dotted border-stone-300 dark:border-stone-700"
       />
       <dd className="min-w-0 break-words text-right text-sm font-medium text-[#2d2a26] dark:text-[#f0eae1]">
         {children}
@@ -140,27 +138,25 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Dynamic state for real database counts
   const [booksAddedCount, setBooksAddedCount] = useState<number | null>(null);
   const [borrowedCount, setBorrowedCount] = useState<number | null>(null);
 
   const getInitial = (name?: string | null) =>
     name ? name.charAt(0).toUpperCase() : "U";
 
-  // Sync state and fetch real stats when user session is available
   useEffect(() => {
     if (currentUser) {
       async function fetchUserStats() {
         if (!currentUser?.email) return;
 
         try {
-          // Fetch books added by user
-            const {data:tokenData} = await authClient.token()
-            const token = tokenData?.token
+          const { data: tokenData } = await authClient.token();
+          const token = tokenData?.token;
+
           const booksRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-books/${currentUser.email}`, {
             cache: "no-store",
-            headers:{
-              authorization : `Bearer ${token}`
+            headers: {
+              authorization: `Bearer ${token}`
             }
           });
           if (booksRes.ok) {
@@ -168,11 +164,10 @@ export default function ProfilePage() {
             setBooksAddedCount(Array.isArray(booksData) ? booksData.length : 0);
           }
 
-          // Fetch active borrows by user
           const borrowsRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-borrows/${currentUser.email}`, {
             cache: "no-store",
-            headers:{
-              authorization : `Bearer ${token}`
+            headers: {
+              authorization: `Bearer ${token}`
             }
           });
           if (borrowsRes.ok) {
@@ -208,7 +203,7 @@ export default function ProfilePage() {
 
       if (data) {
         await refetch();
-        setSuccessMessage("Your card was updated.");
+        setSuccessMessage("Your library card has been successfully updated.");
         setIsEditing(false);
         setTimeout(() => setSuccessMessage(""), 4000);
       }
@@ -241,201 +236,213 @@ export default function ProfilePage() {
       })
     : "Recently joined";
 
-  // Dynamic stats array with 2 columns
   const stats = [
-    { label: "Books added", value: booksAddedCount !== null ? booksAddedCount : "..." },
-    { label: "Active borrowings", value: borrowedCount !== null ? borrowedCount : "..." },
+    { label: "Books added", value: booksAddedCount !== null ? booksAddedCount : "...", icon: <BookOpen className="h-4 w-4 text-[#8c6d46] dark:text-[#d4a373]" /> },
+    { label: "Active borrowings", value: borrowedCount !== null ? borrowedCount : "...", icon: <BookmarkCheck className="h-4 w-4 text-[#8c6d46] dark:text-[#d4a373]" /> },
   ];
 
   const previewName = isEditing ? tempName : currentUser.name;
   const previewImage = isEditing ? tempAvatar : currentUser.image;
 
   return (
-    <main className="w-full py-12 md:py-16 px-4 sm:px-6 lg:px-8 bg-[#f4efe6] dark:bg-[#151312] border border-[#e8e2d9] dark:border-[#2d2924] rounded-2xl transition-colors duration-300">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="font-serif text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+    <main className="w-full py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+      {/* Page Title Header */}
+      <div className="mb-10 text-center sm:text-left">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#8c6d46]/10 dark:bg-[#d4a373]/10 px-3.5 py-1 text-xs font-semibold text-[#8c6d46] dark:text-[#d4a373] mb-3">
+          <ShieldCheck className="h-3.5 w-3.5" /> Reader Membership Record
+        </span>
+        <h1 className="font-serif text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl text-[#2d2a26] dark:text-[#f0eae1]">
           Your library card
         </h1>
         <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
-          This is how you appear to other members when you add and lend books.
+          Manage your credentials, view borrowing statistics, and update how you appear across the BookNook archives.
         </p>
+      </div>
 
-        {/* the card, sitting on top of the rest of the catalog drawer */}
-        <div className="relative mt-10">
-          <div
-            aria-hidden
-            className="absolute inset-0 translate-x-3 translate-y-3 rounded-[4px] border border-stone-300 bg-stone-100 dark:border-stone-700 dark:bg-stone-800"
-          />
-          <div
-            aria-hidden
-            className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-[4px] border border-stone-300 bg-stone-50 dark:border-stone-700 dark:bg-stone-800/80"
-          />
+      {/* Stacked Vintage Card Effect */}
+      <div className="relative">
+        <div
+          aria-hidden
+          className="absolute inset-0 translate-x-3 translate-y-3 rounded-[6px] border border-stone-300 bg-stone-200/60 dark:border-stone-700 dark:bg-stone-800/40"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-[6px] border border-stone-300 bg-stone-100 dark:border-stone-700 dark:bg-stone-800/80"
+        />
 
-          <section
-            aria-label="Library card"
-            className="relative rounded-[4px] border border-stone-300 bg-white px-6 pb-16 pt-4 shadow-[0_2px_0_rgba(0,0,0,.04),0_22px_36px_-24px_rgba(0,0,0,.4)] dark:border-stone-700 dark:bg-stone-900 sm:px-8"
-          >
-            {/* header rule */}
-            <div className="flex items-baseline justify-between gap-4 border-b-2 border-[#b4473f]/70 pb-2">
-              <p className="font-serif text-lg font-semibold">BookNook Library</p>
-              <p className="text-sm text-stone-500 dark:text-stone-400">
-                Joined {memberSince}
-              </p>
+        <section
+          aria-label="Library card"
+          className="relative rounded-[6px] border border-stone-300 bg-white px-6 pb-16 pt-6 shadow-[0_4px_20px_rgba(0,0,0,0.06),0_22px_36px_-24px_rgba(0,0,0,.3)] dark:border-stone-700 dark:bg-stone-900 sm:px-10 sm:pt-8"
+        >
+          {/* Card Header Rule */}
+          <div className="flex items-baseline justify-between gap-4 border-b-2 border-[#b4473f]/70 pb-3">
+            <div className="flex items-center gap-2 font-serif text-lg font-bold text-[#2d2a26] dark:text-[#f0eae1]">
+              <span>BookNook Archive System</span>
             </div>
+            <p className="text-xs font-medium uppercase tracking-wider text-stone-500 dark:text-stone-400">
+              Joined {memberSince}
+            </p>
+          </div>
 
-            <form onSubmit={handleSave}>
-              <div className="mt-6 grid gap-6 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-8">
-                {/* photo, like the photo box on a real card */}
-                <div className="mx-auto w-36 sm:mx-0 sm:w-full">
-                  <Avatar className="aspect-[3/4] h-auto w-full rounded-[3px] border border-stone-300 shadow-[0_10px_16px_-10px_rgba(0,0,0,.45)] dark:border-stone-600">
-                    <AvatarImage
-                      src={previewImage || undefined}
-                      alt={`Photo of ${previewName || "member"}`}
-                      className="rounded-[3px] object-cover"
-                    />
-                    <AvatarFallback
-                      className="rounded-[3px] bg-[#3e342a] font-serif text-5xl font-semibold"
-                      style={{ color: FOIL }}
-                    >
-                      {getInitial(previewName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <p className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400">
-                    Member photo
-                  </p>
-                </div>
+          <form onSubmit={handleSave}>
+            <div className="mt-8 grid gap-8 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-10 items-start">
+              
+              {/* Photo Column */}
+              <div className="mx-auto w-40 sm:mx-0 sm:w-full">
+                <Avatar className="aspect-[3/4] h-auto w-full rounded-[4px] border-2 border-stone-300 shadow-[0_12px_20px_-10px_rgba(0,0,0,.3)] dark:border-stone-600">
+                  <AvatarImage
+                    src={previewImage || undefined}
+                    alt={`Photo of ${previewName || "member"}`}
+                    className="rounded-[3px] object-cover"
+                  />
+                  <AvatarFallback
+                    className="rounded-[3px] bg-[#3e342a] font-serif text-6xl font-semibold"
+                    style={{ color: FOIL }}
+                  >
+                    {getInitial(previewName)}
+                  </AvatarFallback>
+                </Avatar>
+                <p className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400 italic">
+                  Official member ID photo
+                </p>
+              </div>
 
-                {/* details */}
-                <div className="min-w-0">
-                  {isEditing ? (
-                    <div className="space-y-5">
-                      <div className="space-y-1">
-                        <Label htmlFor="profile-name" className={fieldLabel}>
-                          Full name
-                        </Label>
-                        <Input
-                          id="profile-name"
-                          type="text"
-                          required
-                          autoFocus
-                          autoComplete="name"
-                          value={tempName}
-                          onChange={(e) => setTempName(e.target.value)}
-                          className={`${ruledInput} font-serif text-xl`}
-                        />
-                      </div>
+              {/* Details Column */}
+              <div className="min-w-0 space-y-6">
+                {isEditing ? (
+                  <div className="space-y-4 bg-stone-50 dark:bg-stone-950/40 p-5 rounded-xl border border-stone-200 dark:border-stone-800">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="profile-name" className={fieldLabel}>
+                        Full name
+                      </Label>
+                      <Input
+                        id="profile-name"
+                        type="text"
+                        required
+                        autoFocus
+                        autoComplete="name"
+                        value={tempName}
+                        onChange={(e) => setTempName(e.target.value)}
+                        className={`${ruledInput} font-serif text-xl`}
+                      />
+                    </div>
 
-                      <div className="space-y-1">
-                        <Label htmlFor="profile-avatar" className={fieldLabel}>
-                          Photo URL
-                        </Label>
-                        <Input
-                          id="profile-avatar"
-                          type="url"
-                          value={tempAvatar}
-                          onChange={(e) => setTempAvatar(e.target.value)}
-                          placeholder="https://example.com/avatar.jpg"
-                          className={ruledInput}
-                        />
-                      </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="profile-avatar" className={fieldLabel}>
+                        Photo URL (Image link)
+                      </Label>
+                      <Input
+                        id="profile-avatar"
+                        type="url"
+                        value={tempAvatar}
+                        onChange={(e) => setTempAvatar(e.target.value)}
+                        placeholder="https://images.unsplash.com/..."
+                        className={ruledInput}
+                      />
+                    </div>
 
+                    <div className="pt-2">
                       <dl>
-                        <DetailRow label="Email">{currentUser.email}</DetailRow>
+                        <DetailRow label="Email Address">{currentUser.email}</DetailRow>
                       </dl>
                     </div>
-                  ) : (
-                    <>
-                      <h2 className="break-words font-serif text-3xl font-semibold leading-tight">
-                        {currentUser.name}
-                      </h2>
-                      <dl className="mt-3">
-                        <DetailRow label="Email">{currentUser.email}</DetailRow>
-                        <DetailRow label="Account status">Active reader</DetailRow>
-                        <DetailRow label="Member since">{memberSince}</DetailRow>
-                      </dl>
-                    </>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h2 className="break-words font-serif text-3xl font-bold leading-tight text-[#2d2a26] dark:text-[#f0eae1]">
+                      {currentUser.name}
+                    </h2>
+                    <dl className="mt-4 divide-y divide-stone-100 dark:divide-stone-800">
+                      <DetailRow label="Email Address">{currentUser.email}</DetailRow>
+                      <DetailRow label="Account Status">Active member reader</DetailRow>
+                      <DetailRow label="Authorization">Standard Reader Card</DetailRow>
+                    </dl>
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* due-slip activity with 2 dynamic columns */}
-              <div className="mt-8 grid grid-cols-2 divide-x divide-dashed divide-stone-300 rounded-[4px] border-2 border-dashed border-stone-300 dark:divide-stone-700 dark:border-stone-700">
-                {stats.map((s) => (
-                  <div key={s.label} className="px-3 py-4 text-center sm:px-5">
-                    <p className="font-serif text-2xl font-semibold leading-none sm:text-3xl">
+            {/* Activity Stats Grid */}
+            <div className="mt-10 grid grid-cols-2 divide-x divide-dashed divide-stone-300 rounded-[6px] border-2 border-dashed border-stone-300 bg-stone-50/50 dark:divide-stone-700 dark:border-stone-700 dark:bg-stone-950/30">
+              {stats.map((s) => (
+                <div key={s.label} className="px-4 py-5 text-center sm:px-6 flex flex-col items-center justify-center">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    {s.icon}
+                    <p className="font-serif text-3xl font-bold leading-none text-[#2d2a26] dark:text-[#f0eae1]">
                       {s.value}
                     </p>
-                    <p className="mt-2 text-xs text-stone-500 dark:text-stone-400 sm:text-sm">
-                      {s.label}
-                    </p>
                   </div>
-                ))}
-              </div>
-
-              {/* messages + actions */}
-              <div aria-live="polite" className="empty:hidden">
-                {errorMessage && (
-                  <p
-                    role="alert"
-                    className="mt-5 text-sm font-medium text-[#9b2f2a] dark:text-[#e58a84]"
-                  >
-                    {errorMessage}
+                  <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                    {s.label}
                   </p>
-                )}
-                {successMessage && (
-                  <p className="mt-5 flex items-center gap-2 text-sm font-medium text-[#2f4a3c] dark:text-[#8fbf9f]">
-                    <Check className="h-4 w-4 shrink-0" />
-                    {successMessage}
-                  </p>
-                )}
-              </div>
+                </div>
+              ))}
+            </div>
 
-              <div className="mt-6 flex items-center justify-end gap-2">
-                {isEditing ? (
-                  <>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={handleCancel}
-                      disabled={isSubmitting}
-                      className="h-11 cursor-pointer rounded-[6px] px-4 text-sm font-medium text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-white/10"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="h-11 cursor-pointer gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a] hover:brightness-125 disabled:opacity-50 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]"
-                    >
-                      {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {isSubmitting ? "Saving" : "Save changes"}
-                    </Button>
-                  </>
-                ) : (
+            {/* Feedback Banners */}
+            <div aria-live="polite" className="empty:hidden">
+              {errorMessage && (
+                <p
+                  role="alert"
+                  className="mt-6 rounded-lg bg-red-50 p-3 text-sm font-medium text-[#9b2f2a] border border-red-200 dark:bg-red-950/30 dark:border-red-900/50 dark:text-[#e58a84]"
+                >
+                  {errorMessage}
+                </p>
+              )}
+              {successMessage && (
+                <div className="mt-6 flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm font-medium text-[#2f4a3c] border border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-900/50 dark:text-[#8fbf9f]">
+                  <Check className="h-4 w-4 shrink-0" />
+                  <p>{successMessage}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Form Actions */}
+            <div className="mt-8 flex items-center justify-end gap-3 pt-4 border-t border-stone-200 dark:border-stone-800">
+              {isEditing ? (
+                <>
                   <Button
                     type="button"
-                    onClick={() => {
-                      setTempName(currentUser.name || "");
-                      setTempAvatar(currentUser.image || "");
-                      setSuccessMessage("");
-                      setIsEditing(true);
-                    }}
-                    className="h-11 cursor-pointer gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a] hover:brightness-125 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]"
+                    variant="ghost"
+                    onClick={handleCancel}
+                    disabled={isSubmitting}
+                    className="h-11 cursor-pointer rounded-[6px] px-5 text-sm font-medium text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-white/10"
                   >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Edit card
+                    Cancel
                   </Button>
-                )}
-              </div>
-            </form>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="h-11 cursor-pointer gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a]/90 disabled:opacity-50 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]/90"
+                  >
+                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {isSubmitting ? "Saving changes..." : "Save changes"}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setTempName(currentUser.name || "");
+                    setTempAvatar(currentUser.image || "");
+                    setSuccessMessage("");
+                    setIsEditing(true);
+                  }}
+                  className="h-11 cursor-pointer gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a]/90 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]/90"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit card
+                </Button>
+              )}
+            </div>
+          </form>
 
-            {/* punch hole */}
-            <span
-              aria-hidden
-              className="absolute bottom-4 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full border border-stone-300 bg-stone-50 shadow-inner dark:border-stone-700 dark:bg-stone-950"
-            />
-          </section>
-        </div>
+          {/* Library Card Punch Hole */}
+          <span
+            aria-hidden
+            className="absolute bottom-4 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full border border-stone-300 bg-stone-50 shadow-inner dark:border-stone-700 dark:bg-stone-950"
+          />
+        </section>
       </div>
     </main>
   );
