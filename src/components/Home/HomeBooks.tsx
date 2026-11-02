@@ -35,7 +35,7 @@ export default function HomeBooks() {
     async function fetchFeaturedBooks() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/featured-books`, {
-          cache: "no-store",
+          next: { revalidate: 60 },
         });
         if (res.ok) {
           const data = await res.json();
