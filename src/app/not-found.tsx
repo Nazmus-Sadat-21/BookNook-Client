@@ -2,76 +2,155 @@
 
 import React from "react";
 import Link from "next/link";
-import { BookOpen, Home, Library, Compass, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+
+type Spine = { w: number; h: number; c: string };
+
+// Spine colours, taken from your site's browns
+const LEFT: Spine[] = [
+  { w: 34, h: 150, c: "#3e342a" },
+  { w: 42, h: 184, c: "#6b4f33" },
+  { w: 30, h: 138, c: "#52402d" },
+  { w: 38, h: 170, c: "#7a5c3a" },
+  { w: 32, h: 156, c: "#4a3a2c" },
+];
+const LEAN: Spine = { w: 36, h: 176, c: "#5e4630" };
+const RIGHT: Spine[] = [
+  { w: 40, h: 162, c: "#52402d" },
+  { w: 30, h: 190, c: "#3e342a" },
+  { w: 36, h: 144, c: "#6b4f33" },
+  { w: 34, h: 172, c: "#7a5c3a" },
+];
+
+function BookSpine({
+  spine,
+  className = "",
+  style,
+}: {
+  spine: Spine;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      className={`relative shrink-0 rounded-t-[2px] shadow-[2px_0_4px_-2px_rgba(0,0,0,.5)] ${className}`}
+      style={{
+        width: spine.w,
+        height: spine.h,
+        backgroundColor: spine.c,
+        ...style,
+      }}
+    >
+      {/* cloth shading */}
+      <div
+        className="absolute inset-0 rounded-t-[2px]"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(0,0,0,.35) 0%, rgba(255,255,255,.14) 35%, rgba(0,0,0,.05) 70%, rgba(0,0,0,.3) 100%)",
+        }}
+      />
+      {/* gold-foil bands */}
+      <span
+        className="absolute inset-x-0 top-5 h-px"
+        style={{ backgroundColor: "rgba(233,217,171,.6)" }}
+      />
+      <span
+        className="absolute inset-x-0 top-[26px] h-px"
+        style={{ backgroundColor: "rgba(233,217,171,.3)" }}
+      />
+      <span
+        className="absolute inset-x-0 bottom-5 h-px"
+        style={{ backgroundColor: "rgba(233,217,171,.6)" }}
+      />
+    </div>
+  );
+}
 
 export default function NotFound() {
   return (
-    <div className="min-h-[85vh] bg-[#f4efe6] dark:bg-[#151312] border border-[#e8e2d9] dark:border-[#2d2924] rounded-2xl flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 transition-colors duration-300 relative overflow-hidden">
-      
-      {/* Decorative Ambient Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-[#d4a373]/15 dark:bg-[#d4a373]/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-[#3e342a]/10 dark:bg-[#d4a373]/5 blur-3xl pointer-events-none" />
+    <main className="flex min-h-[85vh] items-center justify-center px-4 py-14 sm:px-6 lg:px-8">
+      <section
+        aria-labelledby="not-found-title"
+        className="flex w-full max-w-2xl flex-col items-center text-center"
+      >
+        {/* ───────── The shelf with a missing book ───────── */}
+        <div aria-hidden className="w-full">
+          <div className="flex items-end justify-center gap-[3px]">
+            {LEFT.map((s, i) => (
+              <BookSpine
+                key={`l-${i}`}
+                spine={s}
+                className={i < 2 ? "hidden sm:block" : ""}
+              />
+            ))}
 
-      <div className="max-w-xl w-full text-center relative z-10 space-y-8">
-        
-        {/* Visual 404 Badge with Library Bookmark Motif */}
-        <div className="relative inline-block">
-          <div className="mx-auto h-28 w-28 sm:h-32 sm:w-32 rounded-3xl bg-[#3e342a] dark:bg-[#201d1a] border-2 border-[#8c6d46]/30 dark:border-[#d4a373]/30 shadow-2xl flex items-center justify-center text-[#faf8f5] dark:text-[#d4a373] transform -rotate-3 transition-transform hover:rotate-0 duration-300">
-            <BookOpen className="h-12 w-12 sm:h-14 sm:w-14" />
-          </div>
-          
-          {/* Overlaid 404 Tag */}
-          <div className="absolute -bottom-3 -right-3 bg-[#8c6d46] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] font-mono text-sm font-bold px-3 py-1 rounded-full shadow-lg tracking-wider">
-            PAGE 404
-          </div>
-        </div>
+            {/* leaning book */}
+            <BookSpine
+              spine={LEAN}
+              style={{ transform: "rotate(9deg)", transformOrigin: "bottom right" }}
+            />
 
-        {/* Text Content */}
-        <div className="space-y-3">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#2d2a26] dark:text-[#f0eae1] tracking-tight">
-            Lost Between the <span className="text-[#8c6d46] dark:text-[#d4a373]">Pages</span>
-          </h1>
-          <p className="text-sm sm:text-base text-[#625b52] dark:text-[#a89f91] max-w-md mx-auto leading-relaxed">
-            The volume or shelf you are searching for seems to have been misplaced, moved, or checked out permanently.
-          </p>
-        </div>
-
-        {/* Quick Navigation Action Card */}
-        <div className="p-6 rounded-3xl bg-[#fdfcfa] dark:bg-[#1c1a18] border border-[#e8e2d9] dark:border-[#2a2622] shadow-xl space-y-4">
-          <p className="text-xs uppercase font-bold tracking-wider text-[#8c8275] dark:text-[#8a8175]">
-            Where would you like to wander next?
-          </p>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link
-              href="/"
-              className="py-3 px-4 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] font-medium text-sm hover:opacity-95 shadow-md transition flex items-center justify-center gap-2 group"
+            {/* the gap */}
+            <div
+              className="mx-1 flex h-[176px] w-[64px] shrink-0 items-center justify-center rounded-t-[2px] border-2 border-dashed border-stone-400/70 dark:border-stone-500/70"
             >
-              <Home className="h-4 w-4" />
-              <span>Back to Reading Nook</span>
-            </Link>
+              <span className="font-serif text-2xl font-semibold text-stone-500 dark:text-stone-400">
+                404
+              </span>
+            </div>
 
-            <Link
-              href="/books"
-              className="py-3 px-4 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#141211] text-[#2d2a26] dark:text-[#f0eae1] font-medium text-sm hover:bg-[#f2ede4] dark:hover:bg-[#23201d] transition flex items-center justify-center gap-2"
-            >
-              <Library className="h-4 w-4 text-[#8c6d46] dark:text-[#d4a373]" />
-              <span>Explore All Books</span>
-            </Link>
+            {RIGHT.map((s, i) => (
+              <BookSpine
+                key={`r-${i}`}
+                spine={s}
+                className={i > 1 ? "hidden sm:block" : ""}
+              />
+            ))}
           </div>
+
+          {/* shelf board */}
+          <div className="h-3 rounded-t-[2px] bg-[#3e342a]/25 dark:bg-white/10" />
+          <div className="h-1.5 bg-[#3e342a]/50 dark:bg-white/25" />
         </div>
 
-        {/* Subtle Back Button */}
-        <div>
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8c6d46] dark:text-[#d4a373] hover:underline transition"
+        {/* ───────── Message ───────── */}
+        <h1
+          id="not-found-title"
+          className="mt-12 font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-[#2d2a26] dark:text-[#f0eae1] sm:text-5xl"
+        >
+          This page isn&rsquo;t on the shelf
+        </h1>
+        <p className="mt-4 max-w-[46ch] text-[15px] leading-relaxed text-stone-600 dark:text-stone-400 sm:text-base">
+          We couldn&rsquo;t find what you were looking for. The page may have
+          moved, or the link might have a typo.
+        </p>
+
+        {/* ───────── Actions ───────── */}
+        <div className="mt-8 flex w-full flex-col items-center justify-center gap-2 sm:w-auto sm:flex-row">
+          <Link
+            href="/books"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-[6px] bg-[#3e342a] px-7 text-sm font-semibold text-[#faf8f5] shadow-md outline-none transition-[filter,transform] hover:brightness-125 focus-visible:ring-2 focus-visible:ring-[#8c6d46] focus-visible:ring-offset-2 active:translate-y-px dark:bg-[#d4a373] dark:text-[#181614] dark:focus-visible:ring-offset-stone-950 sm:w-auto"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Return to Previous Page
+            Browse books
+          </Link>
+
+          <Link
+            href="/"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-[6px] px-6 text-sm font-medium text-stone-700 outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-[#8c6d46] dark:text-stone-300 dark:hover:bg-white/10 sm:w-auto"
+          >
+            Go home
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[6px] px-6 text-sm font-medium text-[#8c6d46] outline-none transition-colors hover:bg-stone-100 focus-visible:ring-2 focus-visible:ring-[#8c6d46] dark:text-[#d4a373] dark:hover:bg-white/10 sm:w-auto"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Go back
           </button>
         </div>
-
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

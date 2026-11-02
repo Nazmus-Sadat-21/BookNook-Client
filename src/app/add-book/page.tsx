@@ -202,8 +202,7 @@ export default function AddBookPage() {
       const imageFormData = new FormData();
       imageFormData.append("image", file);
 
-      // Put your key in .env.local as NEXT_PUBLIC_IMGBB_KEY
-      const IMGBB_API_KEY = "5e6efab626b697566595ba9c2775d4b0";
+      const IMGBB_API_KEY = `${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`;
 
       const imgRes = await fetch(
         `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
@@ -216,7 +215,7 @@ export default function AddBookPage() {
       const permanentImageUrl = imgData.data.url;
 
       // 2. Save the book with the permanent image URL
-      const res = await fetch(`http://localhost:8000/add-book`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/add-book`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

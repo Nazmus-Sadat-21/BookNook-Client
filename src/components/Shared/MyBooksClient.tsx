@@ -20,7 +20,6 @@ const CATEGORIES = ["Fiction", "Science", "History", "Kids", "Others"];
 // Binding colours, taken from your site's browns
 const CLOTH = ["#3e342a", "#52402d", "#5e4630", "#6b4f33", "#4a3a2c", "#7a5c3a"];
 const FOIL = "#e9d9ab";
-const TICK_HEIGHTS = [20, 16, 20, 17, 19];
 
 function clothFor(category: string) {
   let h = 0;
@@ -65,25 +64,6 @@ function MiniBook({
             "linear-gradient(90deg, rgba(0,0,0,.45), rgba(255,255,255,.2) 50%, transparent)",
         }}
       />
-    </div>
-  );
-}
-
-function CopyTicks({ copies, color }: { copies: number; color: string }) {
-  const n = Math.min(Math.max(copies, 0), TICK_HEIGHTS.length);
-  return (
-    <div className="flex items-end gap-[3px]" aria-hidden>
-      {n > 0 ? (
-        TICK_HEIGHTS.slice(0, n).map((h, i) => (
-          <span
-            key={i}
-            className="w-[5px] rounded-[1px]"
-            style={{ height: h, backgroundColor: color, opacity: 0.55 + (i % 3) * 0.2 }}
-          />
-        ))
-      ) : (
-        <span className="h-5 w-[5px] rounded-[1px] bg-stone-300 dark:bg-stone-600" />
-      )}
     </div>
   );
 }
@@ -191,8 +171,7 @@ export default function MyBooksClient({
         const imageFormData = new FormData();
         imageFormData.append("image", selectedEditFile);
 
-        // Put your key in .env.local as NEXT_PUBLIC_IMGBB_KEY
-        const IMGBB_API_KEY = "5e6efab626b697566595ba9c2775d4b0";
+      const IMGBB_API_KEY = `${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`;
 
         const imgRes = await fetch(
           `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
@@ -232,7 +211,7 @@ export default function MyBooksClient({
     setIsDeleting(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:8000/books/${bookToDelete._id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/books/${bookToDelete._id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("The book could not be deleted. Please try again.");
@@ -274,15 +253,34 @@ export default function MyBooksClient({
         <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-[#2d2a26] dark:text-[#f0eae1] sm:text-5xl">
           My shelf
         </h1>
-        <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
-          {books.length === 0
-            ? "You haven't added any books yet."
-            : `You've added ${books.length} ${books.length === 1 ? "book" : "books"} as `}
-          {books.length > 0 && (
-            <span className="font-medium text-[#2d2a26] dark:text-[#f0eae1]">{userEmail}</span>
-          )}
-          {books.length > 0 && ". Edit a title or take it off the shelf."}
-        </p>
+
+        {books.length === 0 ? (
+          <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
+            You haven&rsquo;t added any books yet.
+          </p>
+        ) : (
+          <>
+            {/* Total count */}
+            <div className="mt-8 flex flex-wrap items-end gap-x-6 gap-y-5">
+              <p
+                aria-hidden
+                className="font-serif text-7xl font-semibold leading-[0.85] tracking-tight text-[#2d2a26] dark:text-[#f0eae1] sm:text-8xl"
+              >
+                {books.length}
+              </p>
+
+              <div className="pb-1">
+                <p className="font-serif text-2xl font-semibold leading-tight text-[#2d2a26] dark:text-[#f0eae1]">
+                  <span className="sr-only">{books.length} </span>
+                  {books.length === 1 ? "book" : "books"} on your shelf
+                </p>
+                <p className="mt-1 break-all text-sm text-stone-500 dark:text-stone-400">
+                  Added as {userEmail}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       {/* Table */}
@@ -294,10 +292,6 @@ export default function MyBooksClient({
           <p className="mx-auto mt-2 max-w-sm text-sm text-stone-500 dark:text-stone-400">
             Books you add to the archive with this account will be listed here.
           </p>
-          <div aria-hidden className="mx-auto mt-8 w-64">
-            <div className="h-3 rounded-t-[2px] bg-[#3e342a]/20 dark:bg-white/10" />
-            <div className="h-1.5 bg-[#3e342a]/40 dark:bg-white/20" />
-          </div>
         </div>
       ) : (
         <section
@@ -330,7 +324,6 @@ export default function MyBooksClient({
 
               <tbody className="divide-y divide-dotted divide-stone-300 dark:divide-stone-700">
                 {books.map((book) => {
-                  const cloth = clothFor(book.category);
                   const copies = book.copies ?? 1;
                   return (
                     <tr
@@ -366,14 +359,9 @@ export default function MyBooksClient({
                         </span>
                       </td>
 
-                      {/* Copies */}
-                      <td className="hidden px-3 py-4 align-middle md:table-cell">
-                        <div className="flex items-center gap-2.5">
-                          <CopyTicks copies={copies} color={cloth} />
-                          <span className="whitespace-nowrap text-sm text-stone-700 dark:text-stone-300">
-                            {copies} {copies === 1 ? "copy" : "copies"}
-                          </span>
-                        </div>
+                      {/* Copies (text only) */}
+                      <td className="hidden whitespace-nowrap px-3 py-4 align-middle text-sm text-stone-700 dark:text-stone-300 md:table-cell">
+                        {copies} {copies === 1 ? "copy" : "copies"}
                       </td>
 
                       {/* Added */}

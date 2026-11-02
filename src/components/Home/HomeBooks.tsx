@@ -34,7 +34,7 @@ export default function HomeBooks() {
   useEffect(() => {
     async function fetchFeaturedBooks() {
       try {
-        const res = await fetch("http://localhost:8000/featured-books", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/featured-books`, {
           cache: "no-store",
         });
         if (res.ok) {
