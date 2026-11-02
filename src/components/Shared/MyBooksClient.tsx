@@ -1,21 +1,8 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { 
-  BookOpen, 
-  Sparkles, 
-  Edit3, 
-  Trash2, 
-  AlertTriangle, 
-  X, 
-  Check, 
-  Layers, 
-  ArrowLeft,
-  Loader2,
-  ImagePlus,
-  RefreshCw 
-} from "lucide-react";
+import { ArrowLeft, Check, Loader2, Pencil, Trash2 } from "lucide-react";
 
 interface Book {
   _id: string;
@@ -30,23 +17,137 @@ interface Book {
 
 const CATEGORIES = ["Fiction", "Science", "History", "Kids", "Others"];
 
-export default function MyBooksClient({ 
-  initialBooks, 
-  userEmail 
-}: { 
-  initialBooks: Book[]; 
-  userEmail: string; 
+// Binding colours, taken from your site's browns
+const CLOTH = ["#3e342a", "#52402d", "#5e4630", "#6b4f33", "#4a3a2c", "#7a5c3a"];
+const FOIL = "#e9d9ab";
+const TICK_HEIGHTS = [20, 16, 20, 17, 19];
+
+function clothFor(category: string) {
+  let h = 0;
+  for (const ch of category) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return CLOTH[h % CLOTH.length];
+}
+
+/* ───────── small pieces ───────── */
+
+function MiniBook({
+  book,
+  className = "h-[60px] w-11",
+}: {
+  book: Pick<Book, "title" | "category" | "coverImage">;
+  className?: string;
+}) {
+  const cloth = clothFor(book.category);
+  return (
+    <div
+      className={`relative shrink-0 overflow-hidden rounded-l-[2px] rounded-r-[4px] shadow-[0_8px_12px_-6px_rgba(0,0,0,.55)] ${className}`}
+      style={{ backgroundColor: cloth }}
+    >
+      {book.coverImage ? (
+        <img src={book.coverImage} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center pl-1">
+          <span
+            aria-hidden
+            className="absolute inset-[3px] left-[6px] rounded-[2px] border"
+            style={{ borderColor: "rgba(233,217,171,.5)" }}
+          />
+          <span className="relative font-serif text-lg font-semibold" style={{ color: FOIL }}>
+            {book.title.charAt(0).toUpperCase()}
+          </span>
+        </div>
+      )}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 w-1.5"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(0,0,0,.45), rgba(255,255,255,.2) 50%, transparent)",
+        }}
+      />
+    </div>
+  );
+}
+
+function CopyTicks({ copies, color }: { copies: number; color: string }) {
+  const n = Math.min(Math.max(copies, 0), TICK_HEIGHTS.length);
+  return (
+    <div className="flex items-end gap-[3px]" aria-hidden>
+      {n > 0 ? (
+        TICK_HEIGHTS.slice(0, n).map((h, i) => (
+          <span
+            key={i}
+            className="w-[5px] rounded-[1px]"
+            style={{ height: h, backgroundColor: color, opacity: 0.55 + (i % 3) * 0.2 }}
+          />
+        ))
+      ) : (
+        <span className="h-5 w-[5px] rounded-[1px] bg-stone-300 dark:bg-stone-600" />
+      )}
+    </div>
+  );
+}
+
+function Modal({
+  labelledBy,
+  onClose,
+  children,
+  maxW = "max-w-lg",
+}: {
+  labelledBy: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  maxW?: string;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/60 p-4 backdrop-blur-[2px]"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-[4px] border border-stone-300 bg-white px-6 pb-7 pt-5 shadow-[0_30px_60px_-20px_rgba(0,0,0,.6)] dark:border-stone-700 dark:bg-stone-900 sm:px-8 ${maxW}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+const fieldLabel = "block text-sm text-stone-500 dark:text-stone-400";
+const fieldInput =
+  "mt-1 w-full border-0 border-b border-stone-300 bg-transparent px-0 py-2 text-[15px] text-[#2d2a26] outline-none transition-colors focus:border-[#8c6d46] focus:ring-0 dark:border-stone-600 dark:text-[#f0eae1] dark:focus:border-[#d4a373]";
+
+/* ───────── main component ───────── */
+
+export default function MyBooksClient({
+  initialBooks,
+  userEmail,
+}: {
+  initialBooks: Book[];
+  userEmail: string;
 }) {
   const [books, setBooks] = useState<Book[]>(initialBooks);
   const [toast, setToast] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Edit Modal States
+  // Edit state
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [selectedEditFile, setSelectedEditFile] = useState<File | null>(null);
 
-  // Delete Confirmation Modal States
+  // Delete state
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -55,411 +156,469 @@ export default function MyBooksClient({
     setTimeout(() => setToast(null), 4500);
   };
 
-  // Handle selecting a new cover file inside edit mode
+  const closeEdit = () => {
+    setEditingBook(null);
+    setSelectedEditFile(null);
+    setError(null);
+  };
+  const closeDelete = () => {
+    setBookToDelete(null);
+    setError(null);
+  };
+
   const handleEditCoverChange = (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      alert("Please choose a valid image file (JPG, PNG or WEBP).");
+      setError("Please choose a valid image file (JPG, PNG or WEBP).");
       return;
     }
+    setError(null);
     setSelectedEditFile(file);
-    // Create local preview URL temporarily
     const previewUrl = URL.createObjectURL(file);
-    if (editingBook) {
-      setEditingBook({ ...editingBook, coverImage: previewUrl });
-    }
+    if (editingBook) setEditingBook({ ...editingBook, coverImage: previewUrl });
   };
 
-  // --- HANDLE EDIT SUBMISSION ---
   const handleUpdateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingBook) return;
 
     setIsUpdating(true);
+    setError(null);
     try {
       let finalCoverUrl = editingBook.coverImage;
 
-      // If a new file was chosen, upload it to ImgBB first
       if (selectedEditFile) {
         const imageFormData = new FormData();
         imageFormData.append("image", selectedEditFile);
 
+        // Put your key in .env.local as NEXT_PUBLIC_IMGBB_KEY
         const IMGBB_API_KEY = "5e6efab626b697566595ba9c2775d4b0";
 
-        const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-          method: "POST",
-          body: imageFormData,
-        });
-
+        const imgRes = await fetch(
+          `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
+          { method: "POST", body: imageFormData }
+        );
         const imgData = await imgRes.json();
         if (!imgData.success) {
-          throw new Error("Failed to upload new cover image to ImgBB. Check your API key.");
+          throw new Error("The new cover could not be uploaded. Check your ImgBB key.");
         }
         finalCoverUrl = imgData.data.url;
       }
 
-      const updatedPayload = {
-        ...editingBook,
-        coverImage: finalCoverUrl,
-      };
+      const updatedPayload = { ...editingBook, coverImage: finalCoverUrl };
 
       const res = await fetch(`http://localhost:8000/books/${editingBook._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedPayload),
       });
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "The server could not update this book.");
 
-      if (!res.ok) {
-        throw new Error(data.message || "Server failed to update book.");
-      }
-
-      // Update local state UI
       setBooks(books.map((b) => (b._id === editingBook._id ? updatedPayload : b)));
-      setEditingBook(null);
-      setSelectedEditFile(null);
-      showToastMsg(`“${editingBook.title}” was successfully updated.`);
-    } catch (error: unknown) {
-      console.error("Update error details:", error);
-      alert(error instanceof Error ? error.message : "Something went wrong while updating the book.");
+      closeEdit();
+      showToastMsg(`“${editingBook.title}” was updated.`);
+    } catch (err: unknown) {
+      console.error("Update error details:", err);
+      setError(err instanceof Error ? err.message : "Something went wrong while saving.");
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // --- HANDLE DELETE CONFIRMATION ---
   const confirmDelete = async () => {
     if (!bookToDelete) return;
 
     setIsDeleting(true);
+    setError(null);
     try {
       const res = await fetch(`http://localhost:8000/books/${bookToDelete._id}`, {
         method: "DELETE",
       });
+      if (!res.ok) throw new Error("The book could not be deleted. Please try again.");
 
-      if (!res.ok) throw new Error("Failed to delete book.");
-
-      // Remove from UI state
       setBooks(books.filter((b) => b._id !== bookToDelete._id));
-      setBookToDelete(null);
-      showToastMsg(`“${bookToDelete.title}” has been removed from the archives.`);
-    } catch (error) {
-      alert("Could not delete book. Please try again.");
+      const title = bookToDelete.title;
+      closeDelete();
+      showToastMsg(`“${title}” was deleted from the archive.`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "The book could not be deleted.");
     } finally {
       setIsDeleting(false);
     }
   };
 
   return (
-    <main className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto transition-colors duration-300 relative">
-      
-      {/* Toast Notification */}
+    <main className="relative mx-auto min-h-screen max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+      {/* Toast */}
       {toast && (
-        <div role="status" className="fixed z-50 inset-x-4 top-4 sm:inset-x-auto sm:right-6 sm:w-[24rem] p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 flex items-start gap-3 text-emerald-800 dark:text-emerald-300 shadow-xl backdrop-blur-md">
-          <Sparkles className="h-5 w-5 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-          <div className="text-sm">
-            <p className="font-semibold">Success</p>
-            <p className="mt-0.5">{toast}</p>
-          </div>
+        <div
+          role="status"
+          className="fixed inset-x-4 bottom-6 z-[60] mx-auto flex max-w-md items-center gap-3 rounded-[4px] bg-[#3e342a] px-5 py-3.5 text-sm text-[#faf8f5] shadow-2xl dark:bg-[#d4a373] dark:text-[#181614]"
+        >
+          <Check className="h-4 w-4 shrink-0" />
+          <p>{toast}</p>
         </div>
       )}
 
-      {/* Header & Total Count */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#e8e2d9] dark:border-[#2d2924] pb-6">
-        <div>
-          <Link
-            href="/books"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8c6d46] dark:text-[#d4a373] mb-3 hover:underline"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to all books
-          </Link>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8c6d46]/10 text-[#8c6d46] text-xs font-semibold mb-3 ml-3">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Personal Dashboard</span>
-          </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-[#2d2a26] dark:text-[#f0eae1]">
-            My Contributed Books
-          </h1>
-          <p className="text-sm text-[#8c8275] dark:text-[#a89f91] mt-1">
-            Manage, update, or remove the books you have added for <span className="font-semibold text-[#2d2a26] dark:text-[#f0eae1]">{userEmail}</span>.
-          </p>
-        </div>
+      {/* Header */}
+      <header>
+        <Link
+          href="/books"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[#8c6d46] hover:underline dark:text-[#d4a373]"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          All books
+        </Link>
 
-        {/* Total Books Count Badge */}
-        <div className="self-start sm:self-auto px-4 py-2.5 rounded-2xl bg-[#3e342a] dark:bg-[#1c1a18] text-[#faf8f5] dark:text-[#f0eae1] border border-[#e8e2d9]/20 shadow-md flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-[#d4a373]" />
-          <span className="text-xs font-semibold">
-            Total Books Added: <span className="text-[#d4a373]">{books.length}</span>
-          </span>
-        </div>
-      </div>
+        <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-[#2d2a26] dark:text-[#f0eae1] sm:text-5xl">
+          My shelf
+        </h1>
+        <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
+          {books.length === 0
+            ? "You haven't added any books yet."
+            : `You've added ${books.length} ${books.length === 1 ? "book" : "books"} as `}
+          {books.length > 0 && (
+            <span className="font-medium text-[#2d2a26] dark:text-[#f0eae1]">{userEmail}</span>
+          )}
+          {books.length > 0 && ". Edit a title or take it off the shelf."}
+        </p>
+      </header>
 
-      {/* Table Section or Empty State */}
+      {/* Table */}
       {books.length === 0 ? (
-        <div className="text-center py-20 bg-[#fdfcfa] dark:bg-[#1c1a18] rounded-3xl border border-[#e8e2d9] dark:border-[#2a2622] shadow-sm">
-          <BookOpen className="h-12 w-12 mx-auto text-[#8c8275] mb-3 opacity-40" />
-          <h3 className="font-serif text-xl font-semibold text-[#2d2a26] dark:text-[#f0eae1]">No books found</h3>
-          <p className="text-xs text-[#8c8275] dark:text-[#a89f91] mt-1 max-w-sm mx-auto">
-            You haven't contributed any books to the archive under this account yet.
+        <div className="mt-12 text-center">
+          <p className="font-serif text-xl text-[#2d2a26] dark:text-[#f0eae1]">
+            Your shelf is empty
           </p>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-stone-500 dark:text-stone-400">
+            Books you add to the archive with this account will be listed here.
+          </p>
+          <div aria-hidden className="mx-auto mt-8 w-64">
+            <div className="h-3 rounded-t-[2px] bg-[#3e342a]/20 dark:bg-white/10" />
+            <div className="h-1.5 bg-[#3e342a]/40 dark:bg-white/20" />
+          </div>
         </div>
       ) : (
-        <div className="rounded-3xl border border-[#e8e2d9] dark:border-[#2a2622] bg-[#fdfcfa] dark:bg-[#1c1a18] shadow-xl overflow-hidden">
+        <section
+          aria-label="Your books"
+          className="mt-10 overflow-hidden rounded-[4px] border border-stone-300 bg-white shadow-[0_2px_0_rgba(0,0,0,.04),0_22px_36px_-26px_rgba(0,0,0,.4)] dark:border-stone-700 dark:bg-stone-900"
+        >
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full border-collapse text-left">
+              <caption className="sr-only">Books you have added to the archive</caption>
               <thead>
-                <tr className="border-b border-[#e8e2d9] dark:border-[#2d2924] bg-[#3e342a]/5 dark:bg-white/[0.02] text-[#625b52] dark:text-[#a89f91] text-xs font-bold uppercase tracking-wider">
-                  <th className="py-4 px-6">Book Image</th>
-                  <th className="py-4 px-6">Name & Author</th>
-                  <th className="py-4 px-6">Category</th>
-                  <th className="py-4 px-6">Copies</th>
-                  <th className="py-4 px-6">Created Date</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
+                <tr className="border-b-2 border-[#b4473f]/70 text-sm text-stone-500 dark:text-stone-400">
+                  <th scope="col" className="w-0 py-3.5 pl-5 pr-3 font-normal sm:pl-7">
+                    <span className="sr-only">Cover</span>
+                  </th>
+                  <th scope="col" className="px-3 py-3.5 font-normal">Book</th>
+                  <th scope="col" className="hidden px-3 py-3.5 font-normal sm:table-cell">
+                    Category
+                  </th>
+                  <th scope="col" className="hidden px-3 py-3.5 font-normal md:table-cell">
+                    Copies
+                  </th>
+                  <th scope="col" className="hidden px-3 py-3.5 font-normal lg:table-cell">
+                    Added
+                  </th>
+                  <th scope="col" className="py-3.5 pl-3 pr-5 text-right font-normal sm:pr-7">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#e8e2d9]/60 dark:divide-[#2a2622] text-sm text-[#2d2a26] dark:text-[#f0eae1]">
-                {books.map((book) => (
-                  <tr key={book._id} className="hover:bg-[#3e342a]/[0.02] dark:hover:bg-white/[0.01] transition">
-                    
-                    {/* Image Thumbnail */}
-                    <td className="py-4 px-6">
-                      <div className="h-14 w-11 rounded-xl overflow-hidden bg-[#3e342a]/10 border border-[#e8e2d9] dark:border-[#2d2924] shrink-0 shadow">
-                        {book.coverImage ? (
-                          <img src={book.coverImage} alt={book.title} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-[#8c8275]">
-                            <BookOpen className="h-5 w-5 opacity-40" />
-                          </div>
-                        )}
-                      </div>
-                    </td>
 
-                    {/* Name & Author */}
-                    <td className="py-4 px-6">
-                      <p className="font-serif font-bold text-base leading-snug line-clamp-1">{book.title}</p>
-                      <p className="text-xs text-[#8c6d46] dark:text-[#d4a373] mt-0.5">By {book.author}</p>
-                    </td>
+              <tbody className="divide-y divide-dotted divide-stone-300 dark:divide-stone-700">
+                {books.map((book) => {
+                  const cloth = clothFor(book.category);
+                  const copies = book.copies ?? 1;
+                  return (
+                    <tr
+                      key={book._id}
+                      className="transition-colors hover:bg-stone-50 dark:hover:bg-white/[0.03]"
+                    >
+                      {/* Cover */}
+                      <td className="w-0 py-4 pl-5 pr-3 align-middle sm:pl-7">
+                        <MiniBook book={book} />
+                      </td>
 
-                    {/* Category */}
-                    <td className="py-4 px-6">
-                      <span className="inline-flex px-3 py-1 rounded-full bg-[#8c6d46]/10 text-[#8c6d46] dark:text-[#d4a373] text-xs font-semibold">
-                        {book.category}
-                      </span>
-                    </td>
+                      {/* Title & author */}
+                      <td className="min-w-[11rem] max-w-[22rem] px-3 py-4 align-middle">
+                        <Link
+                          href={`/books/${book._id}`}
+                          className="block truncate font-serif text-lg font-semibold leading-snug text-[#2d2a26] hover:underline dark:text-[#f0eae1]"
+                        >
+                          {book.title}
+                        </Link>
+                        <p className="truncate text-sm italic text-stone-600 dark:text-stone-400">
+                          {book.author}
+                        </p>
+                        {/* shown here only when the Category column is hidden */}
+                        <span className="mt-1.5 inline-block rounded-[3px] border border-stone-300 px-2 py-0.5 text-xs text-stone-700 dark:border-stone-600 dark:text-stone-300 sm:hidden">
+                          {book.category}
+                        </span>
+                      </td>
 
-                    {/* Copies */}
-                    <td className="py-4 px-6">
-                      <span className="font-semibold">{book.copies ?? 1}</span>
-                    </td>
+                      {/* Category */}
+                      <td className="hidden px-3 py-4 align-middle sm:table-cell">
+                        <span className="inline-block whitespace-nowrap rounded-[3px] border border-stone-300 px-2 py-0.5 text-xs text-stone-700 dark:border-stone-600 dark:text-stone-300">
+                          {book.category}
+                        </span>
+                      </td>
 
-                    {/* Create Date */}
-                    <td className="py-4 px-6 text-xs text-[#8c8275] dark:text-[#a89f91]">
-                      {book.createdAt ? new Date(book.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}
-                    </td>
+                      {/* Copies */}
+                      <td className="hidden px-3 py-4 align-middle md:table-cell">
+                        <div className="flex items-center gap-2.5">
+                          <CopyTicks copies={copies} color={cloth} />
+                          <span className="whitespace-nowrap text-sm text-stone-700 dark:text-stone-300">
+                            {copies} {copies === 1 ? "copy" : "copies"}
+                          </span>
+                        </div>
+                      </td>
 
-                    {/* Actions (Edit & Delete Buttons) */}
-                    <td className="py-4 px-6 text-right space-x-2">
-                      <button
-                        onClick={() => {
-                          setEditingBook(book);
-                          setSelectedEditFile(null);
-                        }}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#3e342a]/10 dark:bg-white/10 text-[#2d2a26] dark:text-[#f0eae1] text-xs font-semibold hover:bg-[#8c6d46] hover:text-white transition cursor-pointer"
-                      >
-                        <Edit3 className="h-3.5 w-3.5" /> Edit
-                      </button>
+                      {/* Added */}
+                      <td className="hidden whitespace-nowrap px-3 py-4 align-middle text-sm text-stone-500 dark:text-stone-400 lg:table-cell">
+                        {book.createdAt
+                          ? new Date(book.createdAt).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "Not recorded"}
+                      </td>
 
-                      <button
-                        onClick={() => setBookToDelete(book)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-semibold hover:bg-red-600 hover:text-white transition cursor-pointer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                      </button>
-                    </td>
-
-                  </tr>
-                ))}
+                      {/* Actions */}
+                      <td className="py-4 pl-3 pr-5 text-right align-middle sm:pr-7">
+                        <div className="inline-flex items-center gap-1">
+                          <button
+                            type="button"
+                            aria-label={`Edit ${book.title}`}
+                            onClick={() => {
+                              setError(null);
+                              setSelectedEditFile(null);
+                              setEditingBook(book);
+                            }}
+                            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-[6px] px-3 text-sm font-medium text-[#3e342a] outline-none transition-colors hover:bg-[#3e342a]/10 focus-visible:ring-2 focus-visible:ring-[#8c6d46] dark:text-[#f0eae1] dark:hover:bg-white/10"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Delete ${book.title}`}
+                            onClick={() => {
+                              setError(null);
+                              setBookToDelete(book);
+                            }}
+                            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-[6px] px-3 text-sm font-medium text-[#9b2f2a] outline-none transition-colors hover:bg-[#9b2f2a]/10 focus-visible:ring-2 focus-visible:ring-[#9b2f2a] dark:text-[#e58a84] dark:hover:bg-[#e58a84]/10"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* --- EDIT MODAL FORM --- */}
+      {/* ───────── Edit modal: a catalog card ───────── */}
       {editingBook && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-[2rem] bg-[#fdfcfa] dark:bg-[#1c1a18] border border-[#e8e2d9] dark:border-[#2a2622] shadow-2xl p-6 sm:p-8 relative max-h-[90vh] overflow-y-auto">
-            
-            <button
-              onClick={() => {
-                setEditingBook(null);
-                setSelectedEditFile(null);
-              }}
-              className="absolute top-6 right-6 h-8 w-8 rounded-full bg-[#3e342a]/10 flex items-center justify-center text-[#625b52] hover:bg-[#3e342a]/20 transition cursor-pointer"
+        <Modal labelledBy="edit-title" onClose={closeEdit}>
+          <div className="flex items-baseline justify-between gap-4 border-b-2 border-[#b4473f]/70 pb-2">
+            <h2
+              id="edit-title"
+              className="font-serif text-xl font-semibold text-[#2d2a26] dark:text-[#f0eae1]"
             >
-              <X className="h-4 w-4" />
-            </button>
-
-            <h2 className="font-serif text-2xl font-bold text-[#2d2a26] dark:text-[#f0eae1] mb-1">
-              Edit Book Entry
+              Edit book
             </h2>
-            <p className="text-xs text-[#8c8275] dark:text-[#a89f91] mb-6">
-              Modify the book details below and save changes.
-            </p>
+            <button
+              type="button"
+              onClick={closeEdit}
+              className="min-h-11 cursor-pointer px-1 text-sm text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
+            >
+              Close
+            </button>
+          </div>
 
-            <form onSubmit={handleUpdateSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[#625b52] dark:text-[#a89f91] mb-1">Title</label>
-                <input
-                  type="text"
-                  required
-                  value={editingBook.title}
-                  onChange={(e) => setEditingBook({ ...editingBook, title: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#141211] text-sm text-[#2d2a26] dark:text-[#f0eae1] focus:outline-none focus:ring-2 focus:ring-[#8c6d46]/50"
-                />
-              </div>
+          <form onSubmit={handleUpdateSubmit} className="mt-5 space-y-5">
+            <div>
+              <label htmlFor="edit-book-title" className={fieldLabel}>Title</label>
+              <input
+                id="edit-book-title"
+                type="text"
+                required
+                autoFocus
+                value={editingBook.title}
+                onChange={(e) => setEditingBook({ ...editingBook, title: e.target.value })}
+                className={fieldInput}
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#625b52] dark:text-[#a89f91] mb-1">Author</label>
-                <input
-                  type="text"
-                  required
-                  value={editingBook.author}
-                  onChange={(e) => setEditingBook({ ...editingBook, author: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#141211] text-sm text-[#2d2a26] dark:text-[#f0eae1] focus:outline-none focus:ring-2 focus:ring-[#8c6d46]/50"
-                />
-              </div>
+            <div>
+              <label htmlFor="edit-book-author" className={fieldLabel}>Author</label>
+              <input
+                id="edit-book-author"
+                type="text"
+                required
+                value={editingBook.author}
+                onChange={(e) => setEditingBook({ ...editingBook, author: e.target.value })}
+                className={fieldInput}
+              />
+            </div>
 
+            <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-5">
               <div>
-                <label className="block text-xs font-bold text-[#625b52] dark:text-[#a89f91] mb-1">Category</label>
+                <label htmlFor="edit-book-category" className={fieldLabel}>Category</label>
                 <select
+                  id="edit-book-category"
                   value={editingBook.category}
                   onChange={(e) => setEditingBook({ ...editingBook, category: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#141211] text-sm text-[#2d2a26] dark:text-[#f0eae1] focus:outline-none focus:ring-2 focus:ring-[#8c6d46]/50"
+                  className={`${fieldInput} cursor-pointer`}
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
               </div>
-
               <div>
-                <label className="block text-xs font-bold text-[#625b52] dark:text-[#a89f91] mb-1">Copies</label>
+                <label htmlFor="edit-book-copies" className={fieldLabel}>Copies</label>
                 <input
+                  id="edit-book-copies"
                   type="number"
                   min={1}
                   max={99}
                   required
                   value={editingBook.copies}
-                  onChange={(e) => setEditingBook({ ...editingBook, copies: Number(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#141211] text-sm text-[#2d2a26] dark:text-[#f0eae1] focus:outline-none focus:ring-2 focus:ring-[#8c6d46]/50"
+                  onChange={(e) =>
+                    setEditingBook({ ...editingBook, copies: Number(e.target.value) })
+                  }
+                  className={fieldInput}
                 />
               </div>
-
-              {/* Cover Image File Input Section */}
-              <div>
-                <label className="block text-xs font-bold text-[#625b52] dark:text-[#a89f91] mb-1">Cover Image File</label>
-                <input
-                  ref={editFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleEditCoverChange(e.target.files?.[0])}
-                  className="hidden"
-                />
-
-                <div className="flex items-center gap-4 p-3 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] bg-[#faf8f5] dark:bg-[#141211]">
-                  <div className="h-16 w-12 rounded-lg overflow-hidden bg-[#3e342a]/10 shrink-0 border border-[#e8e2d9] dark:border-[#2d2924]">
-                    {editingBook.coverImage ? (
-                      <img src={editingBook.coverImage} alt="Cover preview" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-[#8c8275]">
-                        <ImagePlus className="h-5 w-5 opacity-40" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-[#2d2a26] dark:text-[#f0eae1] truncate">
-                      {editingBook.coverImage ? "Cover image loaded" : "No image selected"}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => editFileInputRef.current?.click()}
-                      className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] text-xs font-semibold cursor-pointer"
-                    >
-                      <RefreshCw className="h-3 w-3" /> Change Image
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#e8e2d9] dark:border-[#2a2622]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingBook(null);
-                    setSelectedEditFile(null);
-                  }}
-                  className="px-5 py-2.5 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] text-[#625b52] dark:text-[#a89f91] text-sm font-semibold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] text-sm font-bold shadow-md cursor-pointer disabled:opacity-50"
-                >
-                  {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  <span>Save Changes</span>
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>
-      )}
-
-      {/* --- CUSTOM DELETE CONFIRMATION MODAL --- */}
-      {bookToDelete && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-[2rem] bg-[#fdfcfa] dark:bg-[#1c1a18] border border-[#e8e2d9] dark:border-[#2a2622] shadow-2xl p-6 sm:p-8 text-center space-y-4">
-            
-            <div className="h-14 w-14 rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400 mx-auto flex items-center justify-center">
-              <AlertTriangle className="h-7 w-7" />
             </div>
 
-            <h3 className="font-serif text-2xl font-bold text-[#2d2a26] dark:text-[#f0eae1]">
-              Delete Book?
-            </h3>
-            
-            <p className="text-xs sm:text-sm text-[#8c8275] dark:text-[#a89f91]">
-              Are you sure you want to permanently delete <strong className="text-[#2d2a26] dark:text-[#f0eae1]">“{bookToDelete.title}”</strong> from the archive? This action cannot be undone.
-            </p>
+            {/* Cover */}
+            <div>
+              <span className={fieldLabel}>Cover</span>
+              <input
+                ref={editFileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleEditCoverChange(e.target.files?.[0])}
+                className="hidden"
+              />
+              <div className="mt-2 flex items-center gap-4">
+                <MiniBook book={editingBook} className="h-[84px] w-16" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-stone-700 dark:text-stone-300">
+                    {selectedEditFile
+                      ? selectedEditFile.name
+                      : editingBook.coverImage
+                      ? "Current cover"
+                      : "No cover yet"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => editFileInputRef.current?.click()}
+                    className="mt-1 min-h-11 cursor-pointer text-sm font-medium text-[#8c6d46] underline underline-offset-4 dark:text-[#d4a373]"
+                  >
+                    {editingBook.coverImage ? "Choose a different image" : "Choose an image"}
+                  </button>
+                </div>
+              </div>
+            </div>
 
-            <div className="flex items-center justify-center gap-3 pt-4">
+            {error && (
+              <p role="alert" className="text-sm font-medium text-[#9b2f2a] dark:text-[#e58a84]">
+                {error}
+              </p>
+            )}
+
+            <div className="flex items-center justify-end gap-2 border-t border-dashed border-stone-300 pt-5 dark:border-stone-700">
               <button
                 type="button"
-                onClick={() => setBookToDelete(null)}
-                className="flex-1 px-5 py-3 rounded-xl border border-[#e8e2d9] dark:border-[#2d2924] text-[#625b52] dark:text-[#a89f91] text-sm font-semibold cursor-pointer"
+                onClick={closeEdit}
+                className="min-h-11 cursor-pointer rounded-[6px] px-4 text-sm font-medium text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-white/10"
               >
                 Cancel
               </button>
               <button
-                type="button"
-                disabled={isDeleting}
-                onClick={confirmDelete}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-red-600 text-white text-sm font-bold shadow-lg hover:bg-red-700 transition cursor-pointer disabled:opacity-50"
+                type="submit"
+                disabled={isUpdating}
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md outline-none transition-[filter] hover:brightness-125 focus-visible:ring-2 focus-visible:ring-[#8c6d46] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#d4a373] dark:text-[#181614] dark:focus-visible:ring-offset-stone-900"
               >
-                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                <span>Yes, Delete</span>
+                {isUpdating && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isUpdating ? "Saving" : "Save changes"}
               </button>
             </div>
-
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
 
+      {/* ───────── Delete modal ───────── */}
+      {bookToDelete && (
+        <Modal labelledBy="delete-title" onClose={closeDelete} maxW="max-w-md">
+          <div className="border-b-2 border-[#9b2f2a]/70 pb-2">
+            <h2
+              id="delete-title"
+              className="font-serif text-xl font-semibold text-[#2d2a26] dark:text-[#f0eae1]"
+            >
+              Delete this book?
+            </h2>
+          </div>
+
+          <div className="mt-5 flex items-center gap-4">
+            <MiniBook book={bookToDelete} className="h-[84px] w-16" />
+            <div className="min-w-0">
+              <p className="font-serif text-lg font-semibold leading-snug text-[#2d2a26] line-clamp-2 dark:text-[#f0eae1]">
+                {bookToDelete.title}
+              </p>
+              <p className="text-sm italic text-stone-600 dark:text-stone-400">
+                {bookToDelete.author}
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-5 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+            It will be removed from the archive for everyone. This can’t be undone.
+          </p>
+
+          {error && (
+            <p role="alert" className="mt-3 text-sm font-medium text-[#9b2f2a] dark:text-[#e58a84]">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-6 flex items-center justify-end gap-2 border-t border-dashed border-stone-300 pt-5 dark:border-stone-700">
+            <button
+              type="button"
+              onClick={closeDelete}
+              autoFocus
+              className="min-h-11 cursor-pointer rounded-[6px] px-4 text-sm font-medium text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-white/10"
+            >
+              Keep book
+            </button>
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={confirmDelete}
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[6px] bg-[#9b2f2a] px-6 text-sm font-semibold text-white shadow-md outline-none transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[#9b2f2a] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-stone-900"
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {isDeleting ? "Deleting" : "Delete book"}
+            </button>
+          </div>
+        </Modal>
+      )}
     </main>
   );
 }

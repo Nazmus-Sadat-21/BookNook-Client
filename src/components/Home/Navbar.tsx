@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BookOpen,
   PlusCircle,
@@ -20,14 +20,22 @@ import {
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
-import AuthDialog from "./../../app/(auth)/AuthDialog";
+
+import AuthDialog from '../../app/(auth)/sign-in-2/page';
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requiresAuth = searchParams.get("auth") === "required";
+
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  
+  // Controlled state to programmatically open AuthDialog when middleware redirects
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
   const { data: session, isPending } = authClient.useSession();
   const isLoggedIn = !!session?.user;
@@ -175,24 +183,24 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <AuthDialog
-                mode="login"
-                triggerButton={
-                  <>
-                    <LogIn className="h-4 w-4" /> Login
-                  </>
-                }
-                triggerClassName="px-3 py-1.5 text-sm font-medium text-[#625b52] dark:text-[#a89f91] hover:text-[#2d2a26] dark:hover:text-[#f0eae1] transition flex items-center gap-1 rounded-lg cursor-pointer"
-              />
-              <AuthDialog
-                mode="register"
-                triggerButton={
-                  <>
-                    <UserPlus className="h-4 w-4" /> Register
-                  </>
-                }
-                triggerClassName="px-4 py-1.5 text-sm font-medium rounded-lg bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] hover:opacity-90 shadow-sm transition flex items-center gap-1 cursor-pointer"
-              />
+              <button
+                onClick={() => {
+                  setAuthMode("login");
+                  setIsAuthOpen(true);
+                }}
+                className="px-3 py-1.5 text-sm font-medium text-[#625b52] dark:text-[#a89f91] hover:text-[#2d2a26] dark:hover:text-[#f0eae1] transition flex items-center gap-1 rounded-lg cursor-pointer"
+              >
+                <LogIn className="h-4 w-4" /> Login
+              </button>
+              <button
+                onClick={() => {
+                  setAuthMode("register");
+                  setIsAuthOpen(true);
+                }}
+                className="px-4 py-1.5 text-sm font-medium rounded-lg bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] hover:opacity-90 shadow-sm transition flex items-center gap-1 cursor-pointer"
+              >
+                <UserPlus className="h-4 w-4" /> Register
+              </button>
             </div>
           )}
         </div>
@@ -303,16 +311,26 @@ export default function Navbar() {
           <div className="pt-3 border-t border-[#e8e2d9] dark:border-[#2d2924] flex flex-col gap-2">
             {!isLoggedIn ? (
               <div className="grid grid-cols-2 gap-2 text-center text-sm pt-1">
-                <AuthDialog
-                  mode="login"
-                  triggerButton="Login"
-                  triggerClassName="w-full py-2 border border-[#e8e2d9] dark:border-[#2d2924] rounded-lg text-[#2d2a26] dark:text-[#f0eae1] font-medium text-sm flex items-center justify-center cursor-pointer"
-                />
-                <AuthDialog
-                  mode="register"
-                  triggerButton="Register"
-                  triggerClassName="w-full py-2 bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer"
-                />
+                <button
+                  onClick={() => {
+                    setAuthMode("login");
+                    setIsAuthOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full py-2 border border-[#e8e2d9] dark:border-[#2d2924] rounded-lg text-[#2d2a26] dark:text-[#f0eae1] font-medium text-sm flex items-center justify-center cursor-pointer"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthMode("register");
+                    setIsAuthOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full py-2 bg-[#3e342a] dark:bg-[#d4a373] text-[#faf8f5] dark:text-[#181614] rounded-lg font-medium text-sm flex items-center justify-center cursor-pointer"
+                >
+                  Register
+                </button>
               </div>
             ) : (
               <button
@@ -325,6 +343,16 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Global Auth Dialog Controlled by State */}
+      <AuthDialog
+        isOpen={isAuthOpen || requiresAuth}
+        onClose={() => {
+          setIsAuthOpen(false);
+          if (requiresAuth) router.replace(pathname, { scroll: false });
+        }}
+        initialMode={requiresAuth ? "login" : authMode}
+      />
     </header>
   );
 }

@@ -2,16 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { 
-  BookOpen, 
-  Sparkles, 
-  Search, 
-  SlidersHorizontal, 
-  ArrowRight, 
-  Layers, 
-  User, 
-  Loader2 
+import {
+  BookOpen,
+  Sparkles,
+  Search,
+  SlidersHorizontal,
+  ArrowRight,
+  Loader2,
 } from "lucide-react";
+import BookCard  from '@/components/Shared/BookCard';
 
 interface Book {
   _id: string;
@@ -20,13 +19,14 @@ interface Book {
   category: string;
   copies: number;
   coverImage?: string;
+  description?: string;
   createdAt?: string;
 }
 
 export default function HomeBooks() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -53,18 +53,18 @@ export default function HomeBooks() {
 
   // Filter books based on search query and category
   const filteredBooks = books.filter((book) => {
-    const matchesSearch = 
+    const matchesSearch =
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       book.author.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory === "All" || book.category === selectedCategory;
+
+    const matchesCategory =
+      selectedCategory === "All" || book.category === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
 
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      
       {/* Section Header & Subtitle */}
       <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#8c6d46]/10 text-[#8c6d46] text-xs font-semibold tracking-wide">
@@ -75,13 +75,13 @@ export default function HomeBooks() {
           New Literary Arrivals
         </h2>
         <p className="text-sm text-[#625b52] dark:text-[#a89f91]">
-          Explore the latest additions contributed by our passionate community of book lovers, sorted by recency.
+          Explore the latest additions contributed by our passionate community
+          of book lovers, sorted by recency.
         </p>
       </div>
 
       {/* Searching & Sorting Toolbar */}
       <div className="mb-10 flex flex-col md:flex-row items-center justify-between gap-4 p-4 sm:p-5 rounded-3xl border border-[#e8e2d9] dark:border-[#2a2622] bg-[#fdfcfa]/90 dark:bg-[#1c1a18]/90 backdrop-blur-md shadow-lg">
-        
         {/* Search Input */}
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8c8275]" />
@@ -113,7 +113,6 @@ export default function HomeBooks() {
             <option value="Others">Others</option>
           </select>
         </div>
-
       </div>
 
       {/* Loading or Grid Content */}
@@ -124,68 +123,17 @@ export default function HomeBooks() {
       ) : filteredBooks.length === 0 ? (
         <div className="text-center py-20 bg-[#fdfcfa] dark:bg-[#1c1a18] rounded-3xl border border-[#e8e2d9] dark:border-[#2a2622]">
           <BookOpen className="h-10 w-10 mx-auto text-[#8c8275] mb-3 opacity-40" />
-          <p className="font-serif text-lg font-semibold text-[#2d2a26] dark:text-[#f0eae1]">No books found matching your criteria</p>
-          <p className="text-xs text-[#8c8275] dark:text-[#a89f91] mt-1">Try clearing your search query or selecting a different category.</p>
+          <p className="font-serif text-lg font-semibold text-[#2d2a26] dark:text-[#f0eae1]">
+            No books found matching your criteria
+          </p>
+          <p className="text-xs text-[#8c8275] dark:text-[#a89f91] mt-1">
+            Try clearing your search query or selecting a different category.
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 sm:gap-x-8">
           {filteredBooks.map((book) => (
-            <div 
-              key={book._id}
-              className="group rounded-[2rem] border border-[#e8e2d9] dark:border-[#2a2622] bg-[#fdfcfa] dark:bg-[#1c1a18] shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden"
-            >
-              {/* Card Top: Cover & Badge */}
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#3e342a]/10">
-                {book.coverImage ? (
-                  <img
-                    src={book.coverImage}
-                    alt={book.title}
-                    className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-[#8c8275]">
-                    <BookOpen className="h-10 w-10 opacity-30" />
-                  </div>
-                )}
-                
-                {/* Category Badge */}
-                <div className="absolute top-3 right-3">
-                  <span className="px-3 py-1 rounded-full bg-[#3e342a]/85 backdrop-blur-md text-[11px] font-bold text-[#faf8f5] shadow">
-                    {book.category}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card Body: Title, Author & Details */}
-              <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-1.5">
-                  <h3 className="font-serif text-xl font-bold text-[#2d2a26] dark:text-[#f0eae1] line-clamp-1 group-hover:text-[#8c6d46] transition-colors">
-                    {book.title}
-                  </h3>
-                  <p className="text-xs font-medium text-[#8c6d46] dark:text-[#d4a373] flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5" />
-                    <span>By {book.author}</span>
-                  </p>
-                </div>
-
-                {/* Footer Action */}
-                <div className="pt-4 border-t border-[#e8e2d9]/60 dark:border-[#2a2622] flex items-center justify-between">
-                  <span className="text-[11px] text-[#8c8275] flex items-center gap-1">
-                    <Layers className="h-3.5 w-3.5 text-[#8c6d46]" />
-                    <span>{book.copies ?? 1} copies</span>
-                  </span>
-
-                  <Link
-                    href={`/books/${book._id}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#3e342a]/10 dark:bg-white/10 text-[#2d2a26] dark:text-[#f0eae1] text-xs font-semibold hover:bg-[#8c6d46] hover:text-white transition-all cursor-pointer"
-                  >
-                    <span>View Details</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              </div>
-
-            </div>
+            <BookCard key={book._id} data={book} />
           ))}
         </div>
       )}
@@ -200,7 +148,6 @@ export default function HomeBooks() {
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
-
     </section>
   );
 }
