@@ -6,7 +6,7 @@ export default async function BooksPage() {
   let books = [];
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/books`, {
-      cache: "no-store",
+      next: { revalidate: 60 },
     });
     if (res.ok) {
       books = await res.json();
