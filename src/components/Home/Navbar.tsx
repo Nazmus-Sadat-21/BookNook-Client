@@ -21,7 +21,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 
-import AuthDialog from '../../app/(auth)/sign-in-2/page';
+import AuthDialog from '../../app/(auth)/sign-in-up/page';
 
 export default function Navbar() {
   const pathname = usePathname();

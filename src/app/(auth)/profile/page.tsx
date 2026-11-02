@@ -140,14 +140,46 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Dynamic state for real database counts
+  const [booksAddedCount, setBooksAddedCount] = useState<number | null>(null);
+  const [borrowedCount, setBorrowedCount] = useState<number | null>(null);
+
   const getInitial = (name?: string | null) =>
     name ? name.charAt(0).toUpperCase() : "U";
 
-  // Sync state when session loads/updates
+  // Sync state and fetch real stats when user session is available
   useEffect(() => {
     if (currentUser) {
       setTempName(currentUser.name || "");
       setTempAvatar(currentUser.image || "");
+
+      async function fetchUserStats() {
+        if (!currentUser?.email) return;
+
+        try {
+          // Fetch books added by user
+          const booksRes = await fetch(`http://localhost:8000/my-books/${currentUser.email}`, {
+            cache: "no-store",
+          });
+          if (booksRes.ok) {
+            const booksData = await booksRes.json();
+            setBooksAddedCount(Array.isArray(booksData) ? booksData.length : 0);
+          }
+
+          // Fetch active borrows by user
+          const borrowsRes = await fetch(`http://localhost:8000/my-borrows/${currentUser.email}`, {
+            cache: "no-store",
+          });
+          if (borrowsRes.ok) {
+            const borrowsData = await borrowsRes.json();
+            setBorrowedCount(Array.isArray(borrowsData) ? borrowsData.length : 0);
+          }
+        } catch (error) {
+          console.error("Failed to fetch profile stats:", error);
+        }
+      }
+
+      fetchUserStats();
     }
   }, [currentUser]);
 
@@ -204,11 +236,10 @@ export default function ProfilePage() {
       })
     : "Recently joined";
 
-  // Placeholder numbers: replace with values from your database API
+  // Dynamic stats array with 2 columns
   const stats = [
-    { label: "Books added", value: "12" },
-    { label: "Borrowed now", value: "3" },
-    { label: "Reading streak", value: "14 days" },
+    { label: "Books added", value: booksAddedCount !== null ? booksAddedCount : "..." },
+    { label: "Active borrowings", value: borrowedCount !== null ? borrowedCount : "..." },
   ];
 
   const previewName = isEditing ? tempName : currentUser.name;
@@ -322,8 +353,8 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* due-slip activity */}
-              <div className="mt-8 grid grid-cols-3 divide-x divide-dashed divide-stone-300 rounded-[4px] border-2 border-dashed border-stone-300 dark:divide-stone-700 dark:border-stone-700">
+              {/* due-slip activity with 2 dynamic columns */}
+              <div className="mt-8 grid grid-cols-2 divide-x divide-dashed divide-stone-300 rounded-[4px] border-2 border-dashed border-stone-300 dark:divide-stone-700 dark:border-stone-700">
                 {stats.map((s) => (
                   <div key={s.label} className="px-3 py-4 text-center sm:px-5">
                     <p className="font-serif text-2xl font-semibold leading-none sm:text-3xl">

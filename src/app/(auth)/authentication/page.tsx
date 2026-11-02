@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Lock, LogIn } from "lucide-react";
-import AuthDialog from "./../sign-in-2/page";
+import AuthDialog from "../sign-in-up/page";
 
 const FOIL = "#e9d9ab";
 
