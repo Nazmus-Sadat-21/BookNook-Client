@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BookOpen,
   PlusCircle,
@@ -23,18 +23,15 @@ import Image from "next/image";
 
 import AuthDialog from '../../app/(auth)/sign-in-up/page';
 
-
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const requiresAuth = searchParams.get("auth") === "required";
 
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   
-  // Controlled state to programmatically open AuthDialog when middleware redirects
+  // Controlled state for AuthDialog
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
@@ -73,7 +70,6 @@ export default function Navbar() {
     }
   }, [pathname]);
 
-  // Helper function to get the first character of the username safely
   const getInitial = (name?: string | null) => {
     if (!name) return "U";
     return name.charAt(0).toUpperCase();
@@ -376,14 +372,11 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Global Auth Dialog Controlled by State */}
+      {/* Auth Dialog */}
       <AuthDialog
-        isOpen={isAuthOpen || requiresAuth}
-        onClose={() => {
-          setIsAuthOpen(false);
-          if (requiresAuth) router.replace(pathname, { scroll: false });
-        }}
-        initialMode={requiresAuth ? "login" : authMode}
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        initialMode={authMode}
       />
     </header>
   );

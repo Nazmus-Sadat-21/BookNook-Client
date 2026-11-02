@@ -17,7 +17,14 @@ const CATEGORIES = ["Fiction", "Science", "History", "Kids", "Others"];
 const MAX_DESC = 600;
 
 // Binding colours, taken from your site's browns
-const CLOTH = ["#3e342a", "#52402d", "#5e4630", "#6b4f33", "#4a3a2c", "#7a5c3a"];
+const CLOTH = [
+  "#3e342a",
+  "#52402d",
+  "#5e4630",
+  "#6b4f33",
+  "#4a3a2c",
+  "#7a5c3a",
+];
 const FOIL = "#e9d9ab";
 const TICK_HEIGHTS = [26, 21, 26, 23, 25];
 
@@ -50,11 +57,18 @@ function ShelfLoader() {
           <span
             key={i}
             className="w-3.5 animate-pulse rounded-t-[2px] motion-reduce:animate-none"
-            style={{ height: s.h, backgroundColor: s.c, animationDelay: `${i * 140}ms` }}
+            style={{
+              height: s.h,
+              backgroundColor: s.c,
+              animationDelay: `${i * 140}ms`,
+            }}
           />
         ))}
       </div>
-      <div aria-hidden className="h-1.5 w-56 rounded-[1px] bg-[#3e342a] dark:bg-[#d4a373]/70" />
+      <div
+        aria-hidden
+        className="h-1.5 w-56 rounded-[1px] bg-[#3e342a] dark:bg-[#d4a373]/70"
+      />
       <p className="mt-5 font-serif text-lg text-[#3e342a] dark:text-[#f0eae1]">
         Opening the catalog
       </p>
@@ -76,13 +90,17 @@ function MembersOnly({ onHome }: { onHome: () => void }) {
           >
             Members only
           </p>
-          <p className="text-sm text-stone-500 dark:text-stone-400">Library card</p>
+          <p className="text-sm text-stone-500 dark:text-stone-400">
+            Library card
+          </p>
         </div>
 
         <div className="mt-3 space-y-1" aria-hidden>
           {["Name", "Member no."].map((label) => (
             <div key={label} className="flex items-baseline gap-2 py-2">
-              <span className="text-sm text-stone-500 dark:text-stone-400">{label}</span>
+              <span className="text-sm text-stone-500 dark:text-stone-400">
+                {label}
+              </span>
               <span className="min-w-4 flex-1 -translate-y-[3px] border-b border-dotted border-stone-300 dark:border-stone-600" />
             </div>
           ))}
@@ -206,35 +224,45 @@ export default function AddBookPage() {
 
       const imgRes = await fetch(
         `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
-        { method: "POST", body: imageFormData }
+        { method: "POST", body: imageFormData },
       );
       const imgData = await imgRes.json();
       if (!imgData.success) {
-        throw new Error("The cover could not be uploaded. Check your ImgBB key.");
+        throw new Error(
+          "The cover could not be uploaded. Check your ImgBB key.",
+        );
       }
       const permanentImageUrl = imgData.data.url;
 
-      const {data:tokenData} = await authClient.token()
-      const token = tokenData?.token
+      const { data: tokenData } = await authClient.token();
+      const token = tokenData?.token;
       // 2. Save the book with the permanent image URL
-      const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/add-book`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          title,
-          author,
-          category,
-          copies,
-          description,
-          coverImage: permanentImageUrl,
-          contributorName: loggedInUser?.name,
-          contributorEmail: loggedInUser?.email,
-          createdAt: new Date().toISOString(),
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SERVER_API}/add-book`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            author,
+            category,
+            copies,
+            description,
+            coverImage: permanentImageUrl,
+            contributorName: loggedInUser?.name,
+            contributorEmail: loggedInUser?.email,
+            createdAt: new Date().toISOString(),
+          }),
+        },
+      );
       const result = await res.json();
       if (!res.ok) {
-        throw new Error(result.message || "The server could not save this book.");
+        throw new Error(
+          result.message || "The server could not save this book.",
+        );
       }
 
       setToast(`\u201c${title.trim()}\u201d is now on the shelf.`);
@@ -248,7 +276,9 @@ export default function AddBookPage() {
       setTimeout(() => setToast(null), 4500);
     } catch (error) {
       setSubmitError(
-        error instanceof Error ? error.message : "Something went wrong. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -262,7 +292,7 @@ export default function AddBookPage() {
   const tickCount = Math.min(copies, TICK_HEIGHTS.length);
 
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
+    <main className="w-full py-12 md:py-16 px-4 sm:px-6 lg:px-8 bg-[#f4efe6] dark:bg-[#151312] border border-[#e8e2d9] dark:border-[#2d2924] rounded-2xl transition-colors duration-300">
       {/* Toast */}
       {toast && (
         <div
@@ -278,30 +308,21 @@ export default function AddBookPage() {
         onSubmit={handleSubmit}
         className="grid min-h-screen lg:grid-cols-[minmax(340px,5fr)_7fr]"
       >
-        {/* ───────── Left: the book you're making ───────── */}
+        {/* ───────── Left: the book you're making (Background removed / bg-transparent) ───────── */}
         <aside
           aria-label="Live preview of the book"
-          className="relative flex flex-col items-center justify-center px-6 pb-14 pt-24 transition-colors duration-500 lg:sticky lg:top-0 lg:h-screen lg:py-10"
-          style={{ backgroundColor: cloth }}
+          className="relative flex flex-col items-center justify-between px-6 pb-16 pt-24 lg:sticky lg:top-0 lg:h-screen lg:py-12 bg-transparent shadow-none"
         >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(ellipse at 50% 20%, rgba(255,255,255,.16), transparent 60%)",
-            }}
-          />
-
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="absolute left-5 top-5 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-medium outline-none transition-colors hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/70 sm:left-8 sm:top-8"
-            style={{ color: FOIL }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
+          <div className="w-full max-w-sm flex justify-start z-10 mb-6 lg:mb-0">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-5 text-sm font-semibold outline-none backdrop-blur-md transition-all hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-stone-500 shadow-sm border border-stone-300 dark:border-stone-700 text-stone-800 dark:text-[#e9d9ab] bg-white/70 dark:bg-stone-900/60"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </button>
+          </div>
 
           <input
             ref={fileInputRef}
@@ -325,24 +346,24 @@ export default function AddBookPage() {
               setDragging(false);
               acceptCover(e.dataTransfer.files?.[0]);
             }}
-            className={`relative w-[min(60%,260px)] transition-transform lg:w-[min(58%,300px)] ${
+            className={`relative w-[min(85%,380px)] [perspective:1200px] my-auto lg:w-[min(80%,420px)] transition-transform ${
               dragging ? "scale-[1.03]" : ""
             }`}
           >
             <div
               aria-hidden
-              className="absolute inset-y-[6px] -right-[9px] left-3 rounded-r-[5px] bg-stone-200"
+              className="absolute inset-y-[8px] -right-[12px] left-3 rounded-r-[6px] bg-stone-200 shadow-sm"
               style={{
                 backgroundImage:
-                  "repeating-linear-gradient(180deg, transparent 0 2px, rgba(0,0,0,.09) 2px 3px)",
+                  "repeating-linear-gradient(180deg, transparent 0 2px, rgba(0,0,0,.08) 2px 3px)",
               }}
             />
 
             <div
-              className={`relative aspect-[3/4] overflow-hidden rounded-l-[4px] rounded-r-[8px] shadow-[0_30px_40px_-18px_rgba(0,0,0,.65)] ${
-                dragging ? "ring-2 ring-[#e9d9ab]" : ""
+              className={`relative aspect-[3/4] overflow-hidden rounded-l-[4px] rounded-r-[10px] shadow-[0_35px_50px_-15px_rgba(0,0,0,.5)] ${
+                dragging ? "ring-2 ring-[#8c6d46]" : ""
               }`}
-              style={{ backgroundColor: "rgba(0,0,0,.28)" }}
+              style={{ backgroundColor: "rgba(0,0,0,.3)" }}
             >
               {coverPreview ? (
                 <img
@@ -352,28 +373,27 @@ export default function AddBookPage() {
                 />
               ) : (
                 <div
-                  className="flex h-full w-full flex-col items-center justify-center px-8 pl-11 text-center"
+                  className="flex h-full w-full flex-col items-center justify-center px-10 pl-14 text-center"
                   style={{ backgroundColor: cloth, filter: "brightness(.82)" }}
                 >
                   <div
                     aria-hidden
-                    className="absolute inset-4 left-7 rounded-[3px] border"
-                    style={{ borderColor: "rgba(233,217,171,.55)" }}
-                  />
-                  <div
-                    aria-hidden
-                    className="absolute inset-[24px] left-[36px] rounded-[2px] border"
-                    style={{ borderColor: "rgba(233,217,171,.25)" }}
+                    className="absolute inset-4 left-8 rounded-[4px] border border-dashed"
+                    style={{ borderColor: "rgba(233,217,171,.45)" }}
                   />
                   <p
-                    className="relative break-words font-serif text-xl font-semibold leading-snug line-clamp-5"
+                    className="relative font-serif text-2xl font-bold leading-snug line-clamp-4"
                     style={{ color: title ? FOIL : "rgba(233,217,171,.45)" }}
                   >
                     {title || "Untitled book"}
                   </p>
                   <p
-                    className="relative mt-4 break-words text-sm line-clamp-2"
-                    style={{ color: author ? "rgba(233,217,171,.8)" : "rgba(233,217,171,.4)" }}
+                    className="relative mt-4 text-xs font-medium uppercase tracking-wider line-clamp-2"
+                    style={{
+                      color: author
+                        ? "rgba(233,217,171,.75)"
+                        : "rgba(233,217,171,.4)",
+                    }}
                   >
                     {author || "Author"}
                   </p>
@@ -383,31 +403,31 @@ export default function AddBookPage() {
               {/* spine, hinge, gloss */}
               <div
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-0 w-5"
+                className="pointer-events-none absolute inset-y-0 left-0 w-6"
                 style={{
                   background:
-                    "linear-gradient(90deg, rgba(0,0,0,.45) 0%, rgba(255,255,255,.2) 45%, rgba(0,0,0,.18) 80%, transparent 100%)",
+                    "linear-gradient(90deg, rgba(0,0,0,.5) 0%, rgba(255,255,255,.22) 40%, rgba(0,0,0,.2) 75%, transparent 100%)",
                 }}
               />
               <div
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-[23px] w-px bg-black/30"
+                className="pointer-events-none absolute inset-y-0 left-[24px] w-px bg-black/40"
               />
               <div
                 aria-hidden
-                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/20"
+                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/30"
               />
 
-              <span className="absolute bottom-4 right-4 max-w-[70%] truncate rounded-[3px] bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-800 shadow-sm">
+              <span className="absolute bottom-4 right-4 max-w-[75%] truncate rounded-md bg-stone-900/80 px-3 py-1 text-xs font-semibold tracking-wide text-stone-100 shadow backdrop-blur-sm">
                 {category}
               </span>
             </div>
           </div>
 
           {/* shelf */}
-          <div aria-hidden className="w-[88%] max-w-[420px]">
-            <div className="h-3 rounded-t-[2px] bg-black/35" />
-            <div className="h-1.5 bg-black/55" />
+          <div aria-hidden className="w-[90%] max-w-[440px] pt-4">
+            <div className="h-3.5 rounded-t-[3px] bg-black/40 shadow-md" />
+            <div className="h-2 bg-black/60 shadow-inner" />
           </div>
 
           {/* cover controls */}
@@ -416,8 +436,7 @@ export default function AddBookPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-medium outline-none transition-colors hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/70"
-                style={{ color: FOIL }}
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-medium outline-none transition-colors hover:bg-stone-200/50 dark:hover:bg-stone-800/50 text-[#8c6d46] dark:text-[#d4a373]"
               >
                 <ImagePlus className="h-4 w-4" />
                 {coverPreview ? "Change cover" : "Add a cover"}
@@ -426,26 +445,23 @@ export default function AddBookPage() {
                 <button
                   type="button"
                   onClick={removeCover}
-                  className="min-h-11 cursor-pointer px-2 text-sm underline underline-offset-4 outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-white/70"
-                  style={{ color: "rgba(233,217,171,.8)" }}
+                  className="min-h-11 cursor-pointer px-2 text-sm underline underline-offset-4 outline-none hover:opacity-80 text-stone-500 dark:text-stone-400"
                 >
                   Remove
                 </button>
               )}
             </div>
             <p
-              className="max-w-[16rem] truncate text-xs"
-              style={{ color: coverError ? FOIL : "rgba(233,217,171,.6)" }}
+              className="max-w-[16rem] truncate text-xs text-stone-500 dark:text-stone-400"
               role={coverError ? "alert" : undefined}
             >
-              {coverError || coverName || "Drop an image on the book, or choose one. JPG, PNG or WEBP."}
+              {coverError ||
+                coverName ||
+                "Drop an image on the book, or choose one. JPG, PNG or WEBP."}
             </p>
           </div>
 
-          <p
-            className="absolute bottom-4 left-0 right-0 truncate px-6 text-center text-xs"
-            style={{ color: "rgba(233,217,171,.6)" }}
-          >
+          <p className="truncate px-6 text-center text-xs text-stone-400 dark:text-stone-500 pt-4">
             Catalogued by {loggedInUser.name}
           </p>
         </aside>
@@ -560,7 +576,9 @@ export default function AddBookPage() {
                       max={99}
                       required
                       value={copies}
-                      onChange={(e) => clampCopies(parseInt(e.target.value, 10))}
+                      onChange={(e) =>
+                        clampCopies(parseInt(e.target.value, 10))
+                      }
                       className="w-14 border-x border-stone-300 bg-transparent text-center text-base font-semibold text-[#2d2a26] outline-none focus:ring-0 dark:border-stone-600 dark:text-[#f0eae1]"
                     />
                     <button
@@ -638,7 +656,10 @@ export default function AddBookPage() {
             )}
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-stone-600 dark:text-stone-400" aria-live="polite">
+              <p
+                className="text-sm text-stone-600 dark:text-stone-400"
+                aria-live="polite"
+              >
                 {missing.length === 0
                   ? "Everything is filled in. Ready to shelve."
                   : `Still needed: ${missing.join(", ")}.`}

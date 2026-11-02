@@ -1,7 +1,15 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, ShieldCheck, User, Calendar, Tag, Layers } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  ShieldCheck,
+  User,
+  Calendar,
+  Tag,
+  Layers,
+} from "lucide-react";
 import BorrowModal from "@/components/Shared/BorrowBooksModal";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -32,18 +40,21 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
   const { id } = await params;
 
   const jwtToken = await auth.api.getToken({
-    headers : await headers()
-  })
+    headers: await headers(),
+  });
 
   let book = null;
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/books/${id}`, {
-      headers:{
-        authorization: `Bearer ${jwtToken?.token}`,
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SERVER_API}/books/${id}`,
+      {
+        headers: {
+          authorization: `Bearer ${jwtToken?.token}`,
+        },
+        cache: "no-store",
       },
-      cache: "no-store",
-    });
+    );
 
     if (!res.ok) notFound();
     book = await res.json();
@@ -67,12 +78,36 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
       })
     : "Not recorded";
 
-  const facts: { label: string; icon: React.ReactNode; value: React.ReactNode }[] = [
-    { label: "Author", icon: <User className="h-4 w-4 text-stone-400" />, value: book.author || "Unknown author" },
-    { label: "Genre", icon: <Tag className="h-4 w-4 text-stone-400" />, value: category },
-    { label: "Copies Available", icon: <Layers className="h-4 w-4 text-stone-400" />, value: `${copies} ${copies === 1 ? "copy" : "copies"}` },
-    { label: "Archived On", icon: <Calendar className="h-4 w-4 text-stone-400" />, value: archivedDate },
-    { label: "Contributed By", icon: <ShieldCheck className="h-4 w-4 text-stone-400" />, value: book.contributorName || "Community member" },
+  const facts: {
+    label: string;
+    icon: React.ReactNode;
+    value: React.ReactNode;
+  }[] = [
+    {
+      label: "Author",
+      icon: <User className="h-4 w-4 text-stone-400" />,
+      value: book.author || "Unknown author",
+    },
+    {
+      label: "Genre",
+      icon: <Tag className="h-4 w-4 text-stone-400" />,
+      value: category,
+    },
+    {
+      label: "Copies Available",
+      icon: <Layers className="h-4 w-4 text-stone-400" />,
+      value: `${copies} ${copies === 1 ? "copy" : "copies"}`,
+    },
+    {
+      label: "Archived On",
+      icon: <Calendar className="h-4 w-4 text-stone-400" />,
+      value: archivedDate,
+    },
+    {
+      label: "Contributed By",
+      icon: <ShieldCheck className="h-4 w-4 text-stone-400" />,
+      value: book.contributorName || "Community member",
+    },
   ];
 
   if (book.contributorEmail) {
@@ -91,42 +126,37 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[#faf8f5] text-[#2d2a26] dark:bg-[#121110] dark:text-[#f0eae1]">
+    <main className="w-full py-12 md:py-16 px-4 sm:px-6 lg:px-8 bg-[#f4efe6] dark:bg-[#151312] border border-[#e8e2d9] dark:border-[#2d2924] rounded-2xl transition-colors duration-300">
       <div className="grid min-h-screen lg:grid-cols-[minmax(380px,5fr)_7fr]">
-        
-        {/* ───────── Left Panel: Book Binding & Shelf Showcase ───────── */}
-        <aside
-          className="relative flex flex-col items-center justify-between px-6 pb-16 pt-24 lg:sticky lg:top-0 lg:h-screen lg:py-12 shadow-inner"
-          style={{ backgroundColor: cloth }}
-        >
+        {/* ───────── Left Panel: Book Binding & Shelf Showcase (Background Removed, Larger Book Size) ───────── */}
+        <aside className="relative flex flex-col items-center justify-between px-6 pb-16 pt-24 lg:sticky lg:top-0 lg:h-screen lg:py-12 bg-transparent shadow-none">
           {/* Subtle soft overhead lighting effect */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "radial-gradient(ellipse at 50% 15%, rgba(255,255,255,.18), transparent 65%)",
+                "radial-gradient(ellipse at 50% 15%, transparent 65%)",
             }}
           />
 
           {/* Back Navigation Button */}
-          <div className="w-full max-w-sm flex justify-start z-10">
+          <div className="w-full max-w-sm flex justify-start z-10 mb-6 lg:mb-0">
             <Link
               href="/books"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold outline-none backdrop-blur-md transition-all hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70 shadow-sm"
-              style={{ color: foil, backgroundColor: "rgba(0,0,0,0.15)" }}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold outline-none backdrop-blur-md transition-all hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#8c6d46] shadow-sm border border-stone-300 dark:border-stone-700 text-stone-800 dark:text-[#e9d9ab] bg-white/70 dark:bg-stone-900/60"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back to archive</span>
             </Link>
           </div>
 
-          {/* 3D Book Container */}
-          <div className="relative w-[min(72%,320px)] [perspective:1200px] my-auto lg:w-[min(65%,340px)]">
+          {/* 3D Book Container (Increased size: min(85%, 380px) / lg:min(80%, 420px)) */}
+          <div className="relative w-[min(85%,380px)] [perspective:1200px] my-auto lg:w-[min(80%,420px)]">
             {/* Pages Block Effect behind cover */}
             <div
               aria-hidden
-              className="absolute inset-y-[8px] -right-[10px] left-3 rounded-r-[6px] bg-stone-200 shadow-sm"
+              className="absolute inset-y-[8px] -right-[12px] left-3 rounded-r-[6px] bg-stone-200 shadow-sm"
               style={{
                 backgroundImage:
                   "repeating-linear-gradient(180deg, transparent 0 2px, rgba(0,0,0,.08) 2px 3px)",
@@ -135,7 +165,7 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
 
             {/* Front Cover */}
             <div
-              className="group relative aspect-[3/4] overflow-hidden rounded-l-[4px] rounded-r-[10px] shadow-[0_35px_50px_-15px_rgba(0,0,0,.7)] transition-transform duration-500 ease-out hover:[transform:rotateY(-12deg)] motion-reduce:transition-none motion-reduce:hover:transform-none"
+              className="group relative aspect-[3/4] overflow-hidden rounded-l-[4px] rounded-r-[10px] shadow-[0_35px_50px_-15px_rgba(0,0,0,.5)] transition-transform duration-500 ease-out hover:[transform:rotateY(-12deg)] motion-reduce:transition-none motion-reduce:hover:transform-none"
               style={{
                 backgroundColor: "rgba(0,0,0,.3)",
                 transformOrigin: "left center",
@@ -216,7 +246,10 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
                 {book.title}
               </h1>
               <p className="mt-3 font-serif text-lg italic text-stone-600 dark:text-stone-400">
-                by <span className="not-italic font-semibold text-stone-800 dark:text-stone-200">{book.author || "Unknown author"}</span>
+                by{" "}
+                <span className="not-italic font-semibold text-stone-800 dark:text-stone-200">
+                  {book.author || "Unknown author"}
+                </span>
               </p>
             </div>
 
@@ -228,7 +261,9 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
               <div className="flex items-baseline justify-between gap-4 border-b-2 border-[#8c6d46]/40 pb-3 mb-4">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-[#8c6d46] dark:text-[#d4a373]" />
-                  <span className="font-serif text-xl font-bold tracking-wider">{callNumber}</span>
+                  <span className="font-serif text-xl font-bold tracking-wider">
+                    {callNumber}
+                  </span>
                 </div>
                 <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-stone-600 dark:bg-stone-800 dark:text-stone-300">
                   Call Number
@@ -237,7 +272,10 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
 
               <dl className="divide-y divide-stone-100 dark:divide-stone-800/60">
                 {facts.map((f) => (
-                  <div key={f.label} className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
+                  <div
+                    key={f.label}
+                    className="flex items-center justify-between gap-4 py-3.5 first:pt-0 last:pb-0"
+                  >
                     <dt className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
                       {f.icon}
                       <span>{f.label}</span>
@@ -257,7 +295,8 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
               </h2>
               <div className="rounded-2xl border border-stone-200 bg-white/60 p-6 dark:border-stone-800 dark:bg-stone-900/40 shadow-sm">
                 <p className="max-w-[62ch] whitespace-pre-line font-serif text-base leading-[1.8] text-stone-700 dark:text-stone-300">
-                  {book.description || "No synopsis has been added for this book yet."}
+                  {book.description ||
+                    "No synopsis has been added for this book yet."}
                 </p>
               </div>
             </section>
@@ -269,7 +308,10 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
             className="mt-12 flex flex-col gap-6 rounded-2xl border border-stone-300 bg-white p-6 dark:border-stone-800 dark:bg-stone-900 shadow-lg sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex items-center gap-4">
-              <div className="flex items-end gap-[4px] p-2 rounded-xl bg-stone-100 dark:bg-stone-800" aria-hidden>
+              <div
+                className="flex items-end gap-[4px] p-2 rounded-xl bg-stone-100 dark:bg-stone-800"
+                aria-hidden
+              >
                 {ticks > 0 ? (
                   TICK_HEIGHTS.slice(0, ticks).map((h, i) => (
                     <span
@@ -301,7 +343,6 @@ export default async function BookDetailPage({ params }: BookDetailPageProps) {
             <BorrowModal book={book} cloth={cloth} foil={foil} />
           </section>
         </article>
-
       </div>
     </main>
   );
