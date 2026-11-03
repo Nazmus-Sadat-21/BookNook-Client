@@ -85,10 +85,10 @@ export default function ProfilePage() {
           const token = tokenData?.token;
 
           const [booksRes, borrowsRes] = await Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-books/${currentUser.email}`, {
+            fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-books/${currentUser?.email}`, {
               headers: { authorization: `Bearer ${token}` }
             }),
-            fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-borrows/${currentUser.email}`, {
+            fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-borrows/${currentUser?.email}`, {
               headers: { authorization: `Bearer ${token}` }
             })
           ]);
