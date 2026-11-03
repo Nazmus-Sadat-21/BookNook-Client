@@ -309,162 +309,172 @@ export default function AddBookPage() {
         className="grid min-h-screen lg:grid-cols-[minmax(340px,5fr)_7fr]"
       >
         {/* ───────── Left: the book you're making (Background removed / bg-transparent) ───────── */}
-        <aside
-          aria-label="Live preview of the book"
-          className="relative flex flex-col items-center justify-between px-6 pb-16 pt-24 lg:sticky lg:top-0 lg:h-screen lg:py-12 bg-transparent shadow-none"
-        >
-          <div className="w-full max-w-sm flex justify-start z-10 mb-6 lg:mb-0">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-5 text-sm font-semibold outline-none backdrop-blur-md transition-all hover:bg-black/10 dark:hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-stone-500 shadow-sm border border-stone-300 dark:border-stone-700 text-stone-800 dark:text-[#e9d9ab] bg-white/70 dark:bg-stone-900/60"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
-            </button>
-          </div>
+       {/* ───────── Left: the book you're making ───────── */}
+<aside
+  aria-label="Live preview of the book"
+  className="relative flex flex-col items-center gap-6 px-6 py-6 lg:sticky lg:top-8 lg:h-[calc(100vh-4rem)] lg:py-8"
+>
+  {/* Back */}
+  <div className="flex w-full justify-start">
+    <button
+      type="button"
+      onClick={() => router.back()}
+      className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-stone-300 bg-white/70 px-5 text-sm font-semibold text-stone-800 shadow-sm outline-none backdrop-blur-md transition-all hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-stone-500 dark:border-stone-700 dark:bg-stone-900/60 dark:text-[#e9d9ab] dark:hover:bg-white/10"
+    >
+      <ArrowLeft className="h-4 w-4" />
+      <span>Back</span>
+    </button>
+  </div>
 
-          <input
-            ref={fileInputRef}
-            id="cover-image"
-            name="cover"
-            type="file"
-            accept="image/*"
-            onChange={(e) => acceptCover(e.target.files?.[0])}
-            className="sr-only"
+  {/* Cover, shelf and controls, centered in the remaining space */}
+  <div className="flex w-full flex-1 flex-col items-center justify-center">
+    <input
+      ref={fileInputRef}
+      id="cover-image"
+      name="cover"
+      type="file"
+      accept="image/*"
+      onChange={(e) => acceptCover(e.target.files?.[0])}
+      className="sr-only"
+    />
+
+    {/* the book (also the drop zone) */}
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        acceptCover(e.dataTransfer.files?.[0]);
+      }}
+      className={`relative w-[min(70%,300px)] transition-transform sm:w-[min(60%,300px)] lg:w-[min(80%,300px)] ${
+        dragging ? "scale-[1.03]" : ""
+      }`}
+    >
+      <div
+        aria-hidden
+        className="absolute inset-y-[8px] -right-[12px] left-3 rounded-r-[6px] bg-stone-200 shadow-sm"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(180deg, transparent 0 2px, rgba(0,0,0,.08) 2px 3px)",
+        }}
+      />
+
+      <div
+        className={`relative aspect-[3/4] overflow-hidden rounded-l-[4px] rounded-r-[10px] shadow-[0_35px_50px_-15px_rgba(0,0,0,.5)] ${
+          dragging ? "ring-2 ring-[#8c6d46]" : ""
+        }`}
+        style={{ backgroundColor: "rgba(0,0,0,.3)" }}
+      >
+        {coverPreview ? (
+          <img
+            src={coverPreview}
+            alt="Selected book cover preview"
+            className="h-full w-full object-cover object-center"
           />
-
-          {/* the book (also the drop zone) */}
+        ) : (
           <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragging(false);
-              acceptCover(e.dataTransfer.files?.[0]);
-            }}
-            className={`relative w-[min(85%,380px)] [perspective:1200px] my-auto lg:w-[min(80%,420px)] transition-transform ${
-              dragging ? "scale-[1.03]" : ""
-            }`}
+            className="flex h-full w-full flex-col items-center justify-center px-10 pl-14 text-center"
+            style={{ backgroundColor: cloth, filter: "brightness(.82)" }}
           >
             <div
               aria-hidden
-              className="absolute inset-y-[8px] -right-[12px] left-3 rounded-r-[6px] bg-stone-200 shadow-sm"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(180deg, transparent 0 2px, rgba(0,0,0,.08) 2px 3px)",
-              }}
+              className="absolute inset-4 left-8 rounded-[4px] border border-dashed"
+              style={{ borderColor: "rgba(233,217,171,.45)" }}
             />
-
-            <div
-              className={`relative aspect-[3/4] overflow-hidden rounded-l-[4px] rounded-r-[10px] shadow-[0_35px_50px_-15px_rgba(0,0,0,.5)] ${
-                dragging ? "ring-2 ring-[#8c6d46]" : ""
-              }`}
-              style={{ backgroundColor: "rgba(0,0,0,.3)" }}
-            >
-              {coverPreview ? (
-                <img
-                  src={coverPreview}
-                  alt="Selected book cover preview"
-                  className="h-full w-full object-cover object-center"
-                />
-              ) : (
-                <div
-                  className="flex h-full w-full flex-col items-center justify-center px-10 pl-14 text-center"
-                  style={{ backgroundColor: cloth, filter: "brightness(.82)" }}
-                >
-                  <div
-                    aria-hidden
-                    className="absolute inset-4 left-8 rounded-[4px] border border-dashed"
-                    style={{ borderColor: "rgba(233,217,171,.45)" }}
-                  />
-                  <p
-                    className="relative font-serif text-2xl font-bold leading-snug line-clamp-4"
-                    style={{ color: title ? FOIL : "rgba(233,217,171,.45)" }}
-                  >
-                    {title || "Untitled book"}
-                  </p>
-                  <p
-                    className="relative mt-4 text-xs font-medium uppercase tracking-wider line-clamp-2"
-                    style={{
-                      color: author
-                        ? "rgba(233,217,171,.75)"
-                        : "rgba(233,217,171,.4)",
-                    }}
-                  >
-                    {author || "Author"}
-                  </p>
-                </div>
-              )}
-
-              {/* spine, hinge, gloss */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-0 w-6"
-                style={{
-                  background:
-                    "linear-gradient(90deg, rgba(0,0,0,.5) 0%, rgba(255,255,255,.22) 40%, rgba(0,0,0,.2) 75%, transparent 100%)",
-                }}
-              />
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-[24px] w-px bg-black/40"
-              />
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/30"
-              />
-
-              <span className="absolute bottom-4 right-4 max-w-[75%] truncate rounded-md bg-stone-900/80 px-3 py-1 text-xs font-semibold tracking-wide text-stone-100 shadow backdrop-blur-sm">
-                {category}
-              </span>
-            </div>
-          </div>
-
-          {/* shelf */}
-          <div aria-hidden className="w-[90%] max-w-[440px] pt-4">
-            <div className="h-3.5 rounded-t-[3px] bg-black/40 shadow-md" />
-            <div className="h-2 bg-black/60 shadow-inner" />
-          </div>
-
-          {/* cover controls */}
-          <div className="mt-6 flex min-h-11 flex-col items-center gap-1 text-center">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-medium outline-none transition-colors hover:bg-stone-200/50 dark:hover:bg-stone-800/50 text-[#8c6d46] dark:text-[#d4a373]"
-              >
-                <ImagePlus className="h-4 w-4" />
-                {coverPreview ? "Change cover" : "Add a cover"}
-              </button>
-              {coverPreview && (
-                <button
-                  type="button"
-                  onClick={removeCover}
-                  className="min-h-11 cursor-pointer px-2 text-sm underline underline-offset-4 outline-none hover:opacity-80 text-stone-500 dark:text-stone-400"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
             <p
-              className="max-w-[16rem] truncate text-xs text-stone-500 dark:text-stone-400"
-              role={coverError ? "alert" : undefined}
+              className="relative line-clamp-4 font-serif text-2xl font-bold leading-snug"
+              style={{ color: title ? FOIL : "rgba(233,217,171,.45)" }}
             >
-              {coverError ||
-                coverName ||
-                "Drop an image on the book, or choose one. JPG, PNG or WEBP."}
+              {title || "Untitled book"}
+            </p>
+            <p
+              className="relative mt-4 line-clamp-2 text-xs font-medium uppercase tracking-wider"
+              style={{
+                color: author ? "rgba(233,217,171,.75)" : "rgba(233,217,171,.4)",
+              }}
+            >
+              {author || "Author"}
             </p>
           </div>
+        )}
 
-          <p className="truncate px-6 text-center text-xs text-stone-400 dark:text-stone-500 pt-4">
-            Catalogued by {loggedInUser.name}
-          </p>
-        </aside>
+        {/* spine, hinge, gloss */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 w-6"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(0,0,0,.5) 0%, rgba(255,255,255,.22) 40%, rgba(0,0,0,.2) 75%, transparent 100%)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-[24px] w-px bg-black/40"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/30"
+        />
+
+        <span className="absolute bottom-4 right-4 max-w-[75%] truncate rounded-md bg-stone-900/80 px-3 py-1 text-xs font-semibold tracking-wide text-stone-100 shadow backdrop-blur-sm">
+          {category}
+        </span>
+      </div>
+    </div>
+
+    {/* shelf, sitting right under the book */}
+    <div aria-hidden className="w-[90%] max-w-[360px]">
+      <div className="h-3.5 rounded-t-[3px] bg-black/40 shadow-md" />
+      <div className="h-2 bg-black/60 shadow-inner" />
+    </div>
+
+    {/* cover controls */}
+    <div className="mt-5 flex flex-col items-center gap-1 text-center">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 text-sm font-medium text-[#8c6d46] outline-none transition-colors hover:bg-stone-200/50 focus-visible:ring-2 focus-visible:ring-[#8c6d46] dark:text-[#d4a373] dark:hover:bg-stone-800/50"
+        >
+          <ImagePlus className="h-4 w-4" />
+          {coverPreview ? "Change cover" : "Add a cover"}
+        </button>
+        {coverPreview && (
+          <button
+            type="button"
+            onClick={removeCover}
+            className="min-h-11 cursor-pointer px-2 text-sm text-stone-500 underline underline-offset-4 outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-[#8c6d46] dark:text-stone-400"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+      <p
+        className="max-w-[16rem] truncate text-xs text-stone-500 dark:text-stone-400"
+        role={coverError ? "alert" : undefined}
+      >
+        {coverError ||
+          coverName ||
+          "Drop an image on the book, or choose one. JPG, PNG or WEBP."}
+      </p>
+    </div>
+  </div>
+
+  {/* Added by (from the signed-in session) */}
+  <div className="w-full max-w-sm border-t border-dashed border-stone-300 pt-4 text-center dark:border-stone-700">
+    <p className="text-sm text-stone-500 dark:text-stone-400">Added by</p>
+    <p className="mt-0.5 truncate font-serif text-lg font-semibold text-[#2d2a26] dark:text-[#f0eae1]">
+      {loggedInUser.name}
+    </p>
+    <p className="break-all text-sm text-stone-500 dark:text-stone-400">
+      {loggedInUser.email}
+    </p>
+  </div>
+</aside>
 
         {/* ───────── Right: the catalog form ───────── */}
         <div className="mx-auto w-full max-w-2xl px-5 py-10 sm:px-10 lg:py-16">

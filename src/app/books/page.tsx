@@ -5,8 +5,8 @@ import { BookOpen } from "lucide-react";
 export default async function BooksPage() {
   let books = [];
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/books`, {
-      next: { revalidate: 60 },
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/books`,{
+      cache:"no-store"
     });
     if (res.ok) {
       books = await res.json();
