@@ -2,50 +2,33 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Pencil, ShieldCheck, BookOpen, BookmarkCheck } from "lucide-react";
+import { Check, Loader2, Pencil, BookOpen, BookmarkCheck, History, User, ShieldCheck, ScrollText } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-const FOIL = "#e9d9ab";
-
 const ruledInput =
-  "h-11 rounded-[6px] border border-stone-300 bg-stone-50/50 px-3.5 text-[15px] text-[#2d2a26] shadow-inner placeholder:text-stone-400 focus-visible:border-[#8c6d46] focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-[#8c6d46] dark:border-stone-700 dark:bg-stone-950/50 dark:text-[#f0eae1] dark:placeholder:text-stone-500 dark:focus-visible:border-[#d4a373]";
+  "h-12 rounded-none border-0 border-b-2 border-[#8c6d46]/60 bg-transparent px-3 text-base text-[#2d2a26] font-mono shadow-none placeholder:text-stone-400 focus-visible:border-[#b4473f] focus-visible:ring-0 dark:border-[#d4a373]/60 dark:text-[#f0eae1] dark:focus-visible:border-[#e8bd92]";
 
-const fieldLabel = "text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400";
+const fieldLabel = "text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400";
 
-/* ───────── gates ───────── */
-
-const LOADER_SPINES = [
-  { h: 52, c: "#6b4f33" },
-  { h: 40, c: "#8c6d46" },
-  { h: 56, c: "#52402d" },
-  { h: 46, c: "#a07a4f" },
-  { h: 54, c: "#7a5c3a" },
-  { h: 42, c: "#8c6d46" },
-];
-
-function ShelfLoader() {
+function DeskLoader() {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex min-h-[70vh] flex-col items-center justify-center px-4"
-    >
-      <div className="flex items-end gap-1.5" aria-hidden>
-        {LOADER_SPINES.map((s, i) => (
+    <div role="status" className="flex min-h-[70vh] flex-col items-center justify-center px-4 bg-[#f4f1ea] dark:bg-[#12100e]">
+      <div className="flex items-end gap-1.5 mb-3">
+        {[48, 36, 54, 42, 50, 38].map((h, i) => (
           <span
             key={i}
-            className="w-3.5 animate-pulse rounded-t-[2px] motion-reduce:animate-none"
-            style={{ height: s.h, backgroundColor: s.c, animationDelay: `${i * 140}ms` }}
+            className="w-3 rounded-t bg-[#5a4636] animate-pulse"
+            style={{ height: h, animationDelay: `${i * 120}ms` }}
           />
         ))}
       </div>
-      <div aria-hidden className="h-1.5 w-56 rounded-[1px] bg-[#3e342a] dark:bg-[#d4a373]/70" />
-      <p className="mt-5 font-serif text-lg text-[#3e342a] dark:text-[#f0eae1]">
-        Finding your card
+      <div className="h-2 w-48 rounded bg-[#3e342a] dark:bg-[#d4a373]" />
+      <p className="mt-4 font-serif text-sm tracking-widest text-[#3e342a] dark:text-[#f0eae1] uppercase italic">
+        Unlocking archive ledger...
       </p>
     </div>
   );
@@ -53,84 +36,35 @@ function ShelfLoader() {
 
 function MembersOnly({ onHome }: { onHome: () => void }) {
   return (
-    <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
-      <section
-        aria-labelledby="members-only-title"
-        className="relative w-full max-w-md rounded-[6px] border border-stone-300 bg-white px-7 pb-9 pt-5 shadow-[0_2px_0_rgba(0,0,0,.04),0_22px_36px_-24px_rgba(0,0,0,.4)] dark:border-stone-700 dark:bg-stone-900 sm:px-9"
-      >
-        <div className="flex items-baseline justify-between gap-4 border-b-2 border-[#b4473f]/70 pb-2">
-          <p
-            id="members-only-title"
-            className="font-serif text-lg font-semibold text-[#2d2a26] dark:text-[#f0eae1]"
-          >
-            Members only
-          </p>
-          <p className="text-sm text-stone-500 dark:text-stone-400">Library card</p>
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-8">
+      <div className="relative w-full max-w-md rounded-2xl border-4 border-double border-[#8c6d46] bg-[#faf8f5] dark:bg-[#1a1715] p-6 sm:p-8 shadow-2xl text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#8c6d46]/10 text-[#8c6d46] dark:text-[#d4a373]">
+          <ShieldCheck className="h-7 w-7" />
         </div>
-
-        <div className="mt-3 space-y-1" aria-hidden>
-          {["Name", "Account"].map((label) => (
-            <div key={label} className="flex items-baseline gap-2 py-2">
-              <span className="text-sm text-stone-500 dark:text-stone-400">{label}</span>
-              <span className="min-w-4 flex-1 -translate-y-[3px] border-b border-dotted border-stone-300 dark:border-stone-600" />
-            </div>
-          ))}
-        </div>
-
-        <h2 className="mt-8 font-serif text-2xl font-semibold leading-snug text-[#2d2a26] dark:text-[#f0eae1]">
-          Sign in to see your card
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#2d2a26] dark:text-[#f0eae1]">
+          Restricted Stack Access
         </h2>
-        <p className="mt-2 max-w-[44ch] text-sm leading-relaxed text-stone-600 dark:text-stone-400">
-          Your library card holds your name, photo and activity. Sign in to
-          view and edit it.
+        <p className="mt-2 text-xs font-mono text-stone-600 dark:text-stone-400 leading-relaxed">
+          The physical borrower registration card is locked to authorized members. Please sign in to unlock your ledger.
         </p>
-
         <Button
           type="button"
           onClick={onHome}
-          className="mt-7 h-11 cursor-pointer rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a]/90 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]/90"
+          className="mt-6 h-11 w-full rounded-xl bg-[#3e342a] text-xs font-mono uppercase tracking-widest text-[#faf8f5] hover:bg-[#3e342a]/90 dark:bg-[#d4a373] dark:text-[#181614] shadow-md cursor-pointer"
         >
-          Return home
+          Return to Library Lobby
         </Button>
-
-        <span
-          aria-hidden
-          className="absolute bottom-3 left-1/2 h-3.5 w-3.5 -translate-x-1/2 rounded-full border border-stone-300 bg-stone-50 shadow-inner dark:border-stone-700 dark:bg-stone-950"
-        />
-      </section>
+      </div>
     </div>
   );
 }
-
-function DetailRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-baseline gap-2 py-3 border-b border-stone-100 dark:border-stone-800/60 last:border-0">
-      <dt className="shrink-0 text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">{label}</dt>
-      <span
-        aria-hidden
-        className="min-w-4 flex-1 -translate-y-[3px] border-b border-dotted border-stone-300 dark:border-stone-700"
-      />
-      <dd className="min-w-0 break-words text-right text-sm font-medium text-[#2d2a26] dark:text-[#f0eae1]">
-        {children}
-      </dd>
-    </div>
-  );
-}
-
-/* ───────── page ───────── */
 
 export default function ProfilePage() {
   const router = useRouter();
-
   const { data: session, isPending, refetch } = authClient.useSession();
   const currentUser = session?.user;
 
+  const [activeTab, setActiveTab] = useState<"card" | "ledger">("card");
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState("");
   const [tempAvatar, setTempAvatar] = useState("");
@@ -141,45 +75,37 @@ export default function ProfilePage() {
   const [booksAddedCount, setBooksAddedCount] = useState<number | null>(null);
   const [borrowedCount, setBorrowedCount] = useState<number | null>(null);
 
-  const getInitial = (name?: string | null) =>
-    name ? name.charAt(0).toUpperCase() : "U";
+  const getInitial = (name?: string | null) => (name ? name.charAt(0).toUpperCase() : "U");
 
   useEffect(() => {
-    if (currentUser) {
-      async function fetchUserStats() {
-        if (!currentUser?.email) return;
-
+    if (currentUser?.email) {
+      async function fetchStats() {
         try {
           const { data: tokenData } = await authClient.token();
           const token = tokenData?.token;
 
-          const booksRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-books/${currentUser.email}`, {
-            cache: "no-store",
-            headers: {
-              authorization: `Bearer ${token}`
-            }
-          });
-          if (booksRes.ok) {
-            const booksData = await booksRes.json();
-            setBooksAddedCount(Array.isArray(booksData) ? booksData.length : 0);
-          }
+          const [booksRes, borrowsRes] = await Promise.all([
+            fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-books/${currentUser.email}`, {
+              headers: { authorization: `Bearer ${token}` }
+            }),
+            fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-borrows/${currentUser.email}`, {
+              headers: { authorization: `Bearer ${token}` }
+            })
+          ]);
 
-          const borrowsRes = await fetch(`${process.env.NEXT_PUBLIC_SERVER_API}/my-borrows/${currentUser.email}`, {
-            cache: "no-store",
-            headers: {
-              authorization: `Bearer ${token}`
-            }
-          });
-          if (borrowsRes.ok) {
-            const borrowsData = await borrowsRes.json();
-            setBorrowedCount(Array.isArray(borrowsData) ? borrowsData.length : 0);
+          if (booksRes.ok) {
+            const data = await booksRes.json();
+            setBooksAddedCount(Array.isArray(data) ? data.length : 0);
           }
-        } catch (error) {
-          console.error("Failed to fetch profile stats:", error);
+          if (borrowsRes.ok) {
+            const data = await borrowsRes.json();
+            setBorrowedCount(Array.isArray(data) ? data.length : 0);
+          }
+        } catch (err) {
+          console.error("Failed to load user stats", err);
         }
       }
-
-      fetchUserStats();
+      fetchStats();
     }
   }, [currentUser]);
 
@@ -196,227 +122,180 @@ export default function ProfilePage() {
       });
 
       if (error) {
-        setErrorMessage(error.message || "Failed to update profile.");
+        setErrorMessage(error.message || "Failed to update ledger records.");
         setIsSubmitting(false);
         return;
       }
 
       if (data) {
         await refetch();
-        setSuccessMessage("Your library card has been successfully updated.");
+        setSuccessMessage("Changes stamped into ledger successfully.");
         setIsEditing(false);
         setTimeout(() => setSuccessMessage(""), 4000);
       }
     } catch (err: unknown) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "An unexpected error occurred."
-      );
+      setErrorMessage(err instanceof Error ? err.message : "Unexpected error.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    if (currentUser) {
-      setTempName(currentUser.name || "");
-      setTempAvatar(currentUser.image || "");
-    }
-    setIsEditing(false);
-    setErrorMessage("");
-  };
-
-  if (isPending) return <ShelfLoader />;
+  if (isPending) return <DeskLoader />;
   if (!currentUser) return <MembersOnly onHome={() => router.push("/")} />;
 
   const createdAt = (currentUser as { createdAt?: Date | string }).createdAt;
   const memberSince = createdAt
-    ? new Date(createdAt).toLocaleDateString(undefined, {
-        month: "long",
-        year: "numeric",
-      })
-    : "Recently joined";
-
-  const stats = [
-    { label: "Books added", value: booksAddedCount !== null ? booksAddedCount : "...", icon: <BookOpen className="h-4 w-4 text-[#8c6d46] dark:text-[#d4a373]" /> },
-    { label: "Active borrowings", value: borrowedCount !== null ? borrowedCount : "...", icon: <BookmarkCheck className="h-4 w-4 text-[#8c6d46] dark:text-[#d4a373]" /> },
-  ];
+    ? new Date(createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    : "Recently cataloged";
 
   const previewName = isEditing ? tempName : currentUser.name;
   const previewImage = isEditing ? tempAvatar : currentUser.image;
 
   return (
-    <main className="w-full py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-      {/* Page Title Header */}
-      <div className="mb-10 text-center sm:text-left">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#8c6d46]/10 dark:bg-[#d4a373]/10 px-3.5 py-1 text-xs font-semibold text-[#8c6d46] dark:text-[#d4a373] mb-3">
-          <ShieldCheck className="h-3.5 w-3.5" /> Reader Membership Record
-        </span>
-        <h1 className="font-serif text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl text-[#2d2a26] dark:text-[#f0eae1]">
-          Your library card
-        </h1>
-        <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
-          Manage your credentials, view borrowing statistics, and update how you appear across the BookNook archives.
-        </p>
+    <main className="w-full py-6 sm:py-12 px-3 sm:px-6 lg:px-8 max-w-4xl mx-auto overflow-x-hidden">
+      
+      {/* Antique Ledger Header Banner */}
+      <div className="relative mb-6 sm:mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-[#3e342a] via-[#2f2720] to-[#1c1916] px-5 sm:px-8 py-6 sm:py-8 pr-12 sm:pr-16 text-[#faf8f5] shadow-xl border-l-8 border-[#b4473f]">
+        <div className="absolute top-0 right-6 sm:right-10 h-10 sm:h-12 w-4 sm:w-5 bg-[#b4473f] shadow-lg [clip-path:polygon(0_0,100%_0,100%_100%,50%_75%,0_100%)]" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-[#d4a373] font-semibold flex items-center gap-1.5">
+              <ScrollText className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" /> BookNook Master Archives
+            </span>
+            <h1 className="font-serif text-2xl sm:text-4xl font-bold tracking-tight mt-1 text-[#f0eae1]">
+              Borrower Ledger & Credentials
+            </h1>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 font-mono text-[11px] text-[#e9d9ab] w-fit">
+            <span>Registry ID: #{currentUser?.id ? `${currentUser.id.slice(0, 5).toUpperCase()}...` : "BN-8821"}</span>
+          </div>
+        </div>
       </div>
 
-      {/* Stacked Vintage Card Effect */}
-      <div className="relative">
-        <div
-          aria-hidden
-          className="absolute inset-0 translate-x-3 translate-y-3 rounded-[6px] border border-stone-300 bg-stone-200/60 dark:border-stone-700 dark:bg-stone-800/40"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-[6px] border border-stone-300 bg-stone-100 dark:border-stone-700 dark:bg-stone-800/80"
-        />
+      {/* Main Ledger Book Container */}
+      <div className="relative rounded-2xl sm:rounded-3xl border-2 border-[#8c6d46]/40 dark:border-[#d4a373]/30 bg-[#fbf9f5] dark:bg-[#161412] p-4 sm:p-10 shadow-xl sm:shadow-2xl">
+        
+        {/* Book Page Switcher Tabs */}
+        <div className="flex flex-wrap gap-2 sm:gap-3 border-b-2 border-[#3e342a]/20 dark:border-stone-800 pb-4 font-mono text-xs">
+          <button
+            onClick={() => setActiveTab("card")}
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl uppercase tracking-wider transition cursor-pointer ${
+              activeTab === "card"
+                ? "bg-[#3e342a] text-[#faf8f5] dark:bg-[#d4a373] dark:text-[#181614] font-bold shadow-md"
+                : "bg-stone-200/60 dark:bg-stone-800/60 text-stone-600 dark:text-stone-400 hover:bg-stone-300/80"
+            }`}
+          >
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Borrower Identity
+          </button>
+          <button
+            onClick={() => setActiveTab("ledger")}
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl uppercase tracking-wider transition cursor-pointer ${
+              activeTab === "ledger"
+                ? "bg-[#3e342a] text-[#faf8f5] dark:bg-[#d4a373] dark:text-[#181614] font-bold shadow-md"
+                : "bg-stone-200/60 dark:bg-stone-800/60 text-stone-600 dark:text-stone-400 hover:bg-stone-300/80"
+            }`}
+          >
+            <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Circulation Ledger
+          </button>
+        </div>
 
-        <section
-          aria-label="Library card"
-          className="relative rounded-[6px] border border-stone-300 bg-white px-6 pb-16 pt-6 shadow-[0_4px_20px_rgba(0,0,0,0.06),0_22px_36px_-24px_rgba(0,0,0,.3)] dark:border-stone-700 dark:bg-stone-900 sm:px-10 sm:pt-8"
-        >
-          {/* Card Header Rule */}
-          <div className="flex items-baseline justify-between gap-4 border-b-2 border-[#b4473f]/70 pb-3">
-            <div className="flex items-center gap-2 font-serif text-lg font-bold text-[#2d2a26] dark:text-[#f0eae1]">
-              <span>BookNook Archive System</span>
-            </div>
-            <p className="text-xs font-medium uppercase tracking-wider text-stone-500 dark:text-stone-400">
-              Joined {memberSince}
-            </p>
-          </div>
-
-          <form onSubmit={handleSave}>
-            <div className="mt-8 grid gap-8 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-10 items-start">
+        {/* Tab 1: Borrower Identity Form/Card */}
+        {activeTab === "card" && (
+          <form onSubmit={handleSave} className="mt-6 sm:mt-8 space-y-6 animate-in fade-in duration-300">
+            <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-[13rem_minmax(0,1fr)] items-start">
               
-              {/* Photo Column */}
-              <div className="mx-auto w-40 sm:mx-0 sm:w-full">
-                <Avatar className="aspect-[3/4] h-auto w-full rounded-[4px] border-2 border-stone-300 shadow-[0_12px_20px_-10px_rgba(0,0,0,.3)] dark:border-stone-600">
-                  <AvatarImage
-                    src={previewImage || undefined}
-                    alt={`Photo of ${previewName || "member"}`}
-                    className="rounded-[3px] object-cover"
-                  />
-                  <AvatarFallback
-                    className="rounded-[3px] bg-[#3e342a] font-serif text-6xl font-semibold"
-                    style={{ color: FOIL }}
-                  >
+              {/* Avatar Box with Dotted Red Ink Stamp Overlay */}
+              <div className="relative mx-auto w-36 sm:w-44">
+                <Avatar className="aspect-[3/4] h-auto w-full rounded-md border-4 border-stone-300 dark:border-stone-700 shadow-xl object-cover">
+                  <AvatarImage src={previewImage || undefined} alt="Member avatar" className="object-cover rounded-sm" />
+                  <AvatarFallback className="rounded-sm bg-[#3e342a] font-serif text-4xl sm:text-5xl font-bold text-[#e9d9ab]">
                     {getInitial(previewName)}
                   </AvatarFallback>
                 </Avatar>
-                <p className="mt-2 text-center text-xs text-stone-500 dark:text-stone-400 italic">
-                  Official member ID photo
-                </p>
+                
+                {/* Official Dotted Red Ink Stamp */}
+                <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 h-16 w-16 sm:h-20 sm:w-20 rounded-full border-[3px] border-dotted border-[#80231e] bg-[#9b2f2a]/15 backdrop-blur-md flex items-center justify-center transform -rotate-12 pointer-events-none shadow-lg z-10">
+                  <span className="font-mono text-[8px] sm:text-[10px] font-black tracking-tighter uppercase text-[#9b2f2a] dark:text-[#e58a84] text-center leading-tight drop-shadow-sm">
+                    APPROVED<br />ARCHIVE
+                  </span>
+                </div>
               </div>
 
-              {/* Details Column */}
-              <div className="min-w-0 space-y-6">
+              {/* Details & Edit Fields */}
+              <div className="space-y-4 sm:space-y-6 w-full min-w-0">
                 {isEditing ? (
-                  <div className="space-y-4 bg-stone-50 dark:bg-stone-950/40 p-5 rounded-xl border border-stone-200 dark:border-stone-800">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="profile-name" className={fieldLabel}>
-                        Full name
-                      </Label>
+                  <div className="space-y-4 p-4 sm:p-6 rounded-2xl bg-[#f2ede4] dark:bg-[#1a1715] border border-stone-300 dark:border-stone-800">
+                    <div>
+                      <Label className={fieldLabel}>Borrower Full Name</Label>
                       <Input
-                        id="profile-name"
                         type="text"
                         required
-                        autoFocus
-                        autoComplete="name"
                         value={tempName}
                         onChange={(e) => setTempName(e.target.value)}
-                        className={`${ruledInput} font-serif text-xl`}
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="profile-avatar" className={fieldLabel}>
-                        Photo URL (Image link)
-                      </Label>
-                      <Input
-                        id="profile-avatar"
-                        type="url"
-                        value={tempAvatar}
-                        onChange={(e) => setTempAvatar(e.target.value)}
-                        placeholder="https://images.unsplash.com/..."
                         className={ruledInput}
                       />
                     </div>
-
-                    <div className="pt-2">
-                      <dl>
-                        <DetailRow label="Email Address">{currentUser.email}</DetailRow>
-                      </dl>
+                    <div>
+                      <Label className={fieldLabel}>Photo URL Reference</Label>
+                      <Input
+                        type="url"
+                        value={tempAvatar}
+                        onChange={(e) => setTempAvatar(e.target.value)}
+                        placeholder="https://..."
+                        className={ruledInput}
+                      />
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <h2 className="break-words font-serif text-3xl font-bold leading-tight text-[#2d2a26] dark:text-[#f0eae1]">
-                      {currentUser.name}
-                    </h2>
-                    <dl className="mt-4 divide-y divide-stone-100 dark:divide-stone-800">
-                      <DetailRow label="Email Address">{currentUser.email}</DetailRow>
-                      <DetailRow label="Account Status">Active member reader</DetailRow>
-                      <DetailRow label="Authorization">Standard Reader Card</DetailRow>
-                    </dl>
+                  <div className="space-y-4 font-mono text-sm">
+                    <div className="border-b border-stone-200 dark:border-stone-800 pb-3 truncate">
+                      <span className={fieldLabel}>Full Legal Name</span>
+                      <p className="font-serif text-2xl sm:text-3xl font-bold text-[#2d2a26] dark:text-[#f0eae1] mt-1 truncate">
+                        {currentUser.name}
+                      </p>
+                    </div>
+                    <div className="border-b border-stone-200 dark:border-stone-800 pb-3 truncate">
+                      <span className={fieldLabel}>Registered Email</span>
+                      <p className="text-stone-700 dark:text-stone-300 mt-1 truncate">{currentUser.email}</p>
+                    </div>
+                    <div className="border-b border-stone-200 dark:border-stone-800 pb-3">
+                      <span className={fieldLabel}>Member Since Date</span>
+                      <p className="text-stone-700 dark:text-stone-300 mt-1">{memberSince}</p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Activity Stats Grid */}
-            <div className="mt-10 grid grid-cols-2 divide-x divide-dashed divide-stone-300 rounded-[6px] border-2 border-dashed border-stone-300 bg-stone-50/50 dark:divide-stone-700 dark:border-stone-700 dark:bg-stone-950/30">
-              {stats.map((s) => (
-                <div key={s.label} className="px-4 py-5 text-center sm:px-6 flex flex-col items-center justify-center">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    {s.icon}
-                    <p className="font-serif text-3xl font-bold leading-none text-[#2d2a26] dark:text-[#f0eae1]">
-                      {s.value}
-                    </p>
-                  </div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-                    {s.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Feedback Banners */}
-            <div aria-live="polite" className="empty:hidden">
-              {errorMessage && (
-                <p
-                  role="alert"
-                  className="mt-6 rounded-lg bg-red-50 p-3 text-sm font-medium text-[#9b2f2a] border border-red-200 dark:bg-red-950/30 dark:border-red-900/50 dark:text-[#e58a84]"
-                >
-                  {errorMessage}
-                </p>
-              )}
-              {successMessage && (
-                <div className="mt-6 flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm font-medium text-[#2f4a3c] border border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-900/50 dark:text-[#8fbf9f]">
-                  <Check className="h-4 w-4 shrink-0" />
-                  <p>{successMessage}</p>
-                </div>
-              )}
-            </div>
+            {/* Notifications */}
+            {errorMessage && (
+              <p className="rounded-xl bg-red-50 p-3 font-mono text-xs text-red-600 border border-red-200">{errorMessage}</p>
+            )}
+            {successMessage && (
+              <p className="rounded-xl bg-emerald-50 p-3 font-mono text-xs text-emerald-700 border border-emerald-200 flex items-center gap-2">
+                <Check className="h-4 w-4 shrink-0" /> {successMessage}
+              </p>
+            )}
 
             {/* Form Actions */}
-            <div className="mt-8 flex items-center justify-end gap-3 pt-4 border-t border-stone-200 dark:border-stone-800">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-6 border-t border-stone-200 dark:border-stone-800">
               {isEditing ? (
                 <>
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={handleCancel}
-                    disabled={isSubmitting}
-                    className="h-11 cursor-pointer rounded-[6px] px-5 text-sm font-medium text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-white/10"
+                    onClick={() => setIsEditing(false)}
+                    className="font-mono text-xs uppercase cursor-pointer h-11"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="h-11 cursor-pointer gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a]/90 disabled:opacity-50 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]/90"
+                    className="bg-[#3e342a] text-[#faf8f5] font-mono text-xs uppercase tracking-wider rounded-xl dark:bg-[#d4a373] dark:text-[#181614] h-11 px-6 shadow cursor-pointer"
                   >
-                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {isSubmitting ? "Saving changes..." : "Save changes"}
+                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    Save Stamp
                   </Button>
                 </>
               ) : (
@@ -425,24 +304,58 @@ export default function ProfilePage() {
                   onClick={() => {
                     setTempName(currentUser.name || "");
                     setTempAvatar(currentUser.image || "");
-                    setSuccessMessage("");
                     setIsEditing(true);
                   }}
-                  className="h-11 cursor-pointer gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md hover:bg-[#3e342a]/90 dark:bg-[#d4a373] dark:text-[#181614] dark:hover:bg-[#d4a373]/90"
+                  className="bg-[#3e342a] text-[#faf8f5] font-mono text-xs uppercase tracking-wider rounded-xl dark:bg-[#d4a373] dark:text-[#181614] h-11 px-6 shadow cursor-pointer w-full sm:w-auto"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Edit card
+                  <Pencil className="h-4 w-4 mr-2" /> Edit Identity Card
                 </Button>
               )}
             </div>
           </form>
+        )}
 
-          {/* Library Card Punch Hole */}
-          <span
-            aria-hidden
-            className="absolute bottom-4 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full border border-stone-300 bg-stone-50 shadow-inner dark:border-stone-700 dark:bg-stone-950"
-          />
-        </section>
+        {/* Tab 2: Circulation Ledger */}
+        {activeTab === "ledger" && (
+          <div className="mt-6 sm:mt-8 space-y-6 animate-in fade-in duration-300">
+            <div className="border-b border-stone-200 dark:border-stone-800 pb-2">
+              <p className="font-mono text-xs text-stone-500 uppercase tracking-widest">
+                Official Circulation Summary & Activity Log
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div className="p-5 sm:p-6 rounded-2xl border-2 border-dashed border-[#8c6d46]/40 bg-[#f2ede4]/50 dark:bg-[#12100e] flex items-center gap-4 shadow-sm">
+                <div className="p-3 sm:p-4 rounded-xl bg-[#8c6d46]/10 text-[#8c6d46] dark:text-[#d4a373] shrink-0">
+                  <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+                <div>
+                  <span className="font-serif text-2xl sm:text-3xl font-bold text-[#2d2a26] dark:text-[#f0eae1]">
+                    {booksAddedCount !== null ? booksAddedCount : "..."}
+                  </span>
+                  <span className="block font-mono text-xs uppercase tracking-wider text-stone-500 mt-0.5">
+                    Books Contributed
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-5 sm:p-6 rounded-2xl border-2 border-dashed border-[#8c6d46]/40 bg-[#f2ede4]/50 dark:bg-[#12100e] flex items-center gap-4 shadow-sm">
+                <div className="p-3 sm:p-4 rounded-xl bg-[#8c6d46]/10 text-[#8c6d46] dark:text-[#d4a373] shrink-0">
+                  <BookmarkCheck className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+                <div>
+                  <span className="font-serif text-2xl sm:text-3xl font-bold text-[#2d2a26] dark:text-[#f0eae1]">
+                    {borrowedCount !== null ? borrowedCount : "..."}
+                  </span>
+                  <span className="block font-mono text-xs uppercase tracking-wider text-stone-500 mt-0.5">
+                    Active Borrows
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </main>
   );

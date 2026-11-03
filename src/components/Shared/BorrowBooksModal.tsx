@@ -168,7 +168,7 @@ export default function BorrowModal({ book, cloth, foil }: BorrowModalProps) {
         ) : book.copies <= 0 ? (
           <>
             <X className="h-4 w-4 text-red-400" />
-            Stock Out
+            Not Available
           </>
         ) : (
           <>
