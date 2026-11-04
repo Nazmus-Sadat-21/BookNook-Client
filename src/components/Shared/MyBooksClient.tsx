@@ -88,7 +88,7 @@ function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/60 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/60 p-3 sm:p-4 backdrop-blur-[2px]"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -97,7 +97,7 @@ function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
-        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-[4px] border border-stone-300 bg-white px-6 pb-7 pt-5 shadow-[0_30px_60px_-20px_rgba(0,0,0,.6)] dark:border-stone-700 dark:bg-stone-900 sm:px-8 ${maxW}`}
+        className={`relative max-h-[90vh] w-full overflow-y-auto rounded-[4px] border border-stone-300 bg-white px-5 sm:px-8 pb-7 pt-5 shadow-[0_30px_60px_-20px_rgba(0,0,0,.6)] dark:border-stone-700 dark:bg-stone-900 ${maxW}`}
       >
         {children}
       </div>
@@ -235,7 +235,7 @@ export default function MyBooksClient({
   };
 
   return (
-    <main className="relative mx-auto min-h-screen max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="relative mx-auto min-h-screen max-w-5xl px-3 sm:px-6 lg:px-8 py-8 sm:py-10 overflow-x-hidden">
       {/* Toast */}
       {toast && (
         <div
@@ -257,31 +257,31 @@ export default function MyBooksClient({
           All books
         </Link>
 
-        <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-[#2d2a26] dark:text-[#f0eae1] sm:text-5xl">
+        <h1 className="mt-2 font-serif text-3xl sm:text-5xl font-semibold tracking-tight text-[#2d2a26] dark:text-[#f0eae1]">
           My shelf
         </h1>
 
         {books.length === 0 ? (
-          <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
+          <p className="mt-3 max-w-[56ch] text-sm sm:text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
             You haven&rsquo;t added any books yet.
           </p>
         ) : (
           <>
             {/* Total count */}
-            <div className="mt-8 flex flex-wrap items-end gap-x-6 gap-y-5">
+            <div className="mt-6 sm:mt-8 flex flex-wrap items-end gap-x-6 gap-y-3">
               <p
                 aria-hidden
-                className="font-serif text-7xl font-semibold leading-[0.85] tracking-tight text-[#2d2a26] dark:text-[#f0eae1] sm:text-8xl"
+                className="font-serif text-6xl sm:text-8xl font-semibold leading-[0.85] tracking-tight text-[#2d2a26] dark:text-[#f0eae1]"
               >
                 {books.length}
               </p>
 
               <div className="pb-1">
-                <p className="font-serif text-2xl font-semibold leading-tight text-[#2d2a26] dark:text-[#f0eae1]">
+                <p className="font-serif text-xl sm:text-2xl font-semibold leading-tight text-[#2d2a26] dark:text-[#f0eae1]">
                   <span className="sr-only">{books.length} </span>
                   {books.length === 1 ? "book" : "books"} on your shelf
                 </p>
-                <p className="mt-1 break-all text-sm text-stone-500 dark:text-stone-400">
+                <p className="mt-1 break-all text-xs sm:text-sm text-stone-500 dark:text-stone-400">
                   Added as {userEmail}
                 </p>
               </div>
@@ -290,7 +290,7 @@ export default function MyBooksClient({
         )}
       </header>
 
-      {/* Table */}
+      {/* Table / List Container */}
       {books.length === 0 ? (
         <div className="mt-12 text-center">
           <p className="font-serif text-xl text-[#2d2a26] dark:text-[#f0eae1]">
@@ -303,17 +303,17 @@ export default function MyBooksClient({
       ) : (
         <section
           aria-label="Your books"
-          className="mt-10 overflow-hidden rounded-[4px] border border-stone-300 bg-white shadow-[0_2px_0_rgba(0,0,0,.04),0_22px_36px_-26px_rgba(0,0,0,.4)] dark:border-stone-700 dark:bg-stone-900"
+          className="mt-8 sm:mt-10 overflow-hidden rounded-[4px] border border-stone-300 bg-white shadow-[0_2px_0_rgba(0,0,0,.04),0_22px_36px_-26px_rgba(0,0,0,.4)] dark:border-stone-700 dark:bg-stone-900"
         >
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <caption className="sr-only">Books you have added to the archive</caption>
               <thead>
-                <tr className="border-b-2 border-[#b4473f]/70 text-sm text-stone-500 dark:text-stone-400">
-                  <th scope="col" className="w-0 py-3.5 pl-5 pr-3 font-normal sm:pl-7">
+                <tr className="border-b-2 border-[#b4473f]/70 text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+                  <th scope="col" className="w-0 py-3.5 pl-3 sm:pl-7 pr-2 sm:pr-3 font-normal">
                     <span className="sr-only">Cover</span>
                   </th>
-                  <th scope="col" className="px-3 py-3.5 font-normal">Book</th>
+                  <th scope="col" className="px-2 sm:px-3 py-3.5 font-normal">Book</th>
                   <th scope="col" className="hidden px-3 py-3.5 font-normal sm:table-cell">
                     Category
                   </th>
@@ -323,7 +323,7 @@ export default function MyBooksClient({
                   <th scope="col" className="hidden px-3 py-3.5 font-normal lg:table-cell">
                     Added
                   </th>
-                  <th scope="col" className="py-3.5 pl-3 pr-5 text-right font-normal sm:pr-7">
+                  <th scope="col" className="py-3.5 pl-2 sm:pl-3 pr-3 sm:pr-7 text-right font-normal">
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
@@ -338,23 +338,23 @@ export default function MyBooksClient({
                       className="transition-colors hover:bg-stone-50 dark:hover:bg-white/[0.03]"
                     >
                       {/* Cover */}
-                      <td className="w-0 py-4 pl-5 pr-3 align-middle sm:pl-7">
-                        <MiniBook book={book} />
+                      <td className="w-0 py-4 pl-3 sm:pl-7 pr-2 sm:pr-3 align-middle">
+                        <MiniBook book={book} className="h-[52px] sm:h-[60px] w-9 sm:w-11" />
                       </td>
 
                       {/* Title & author */}
-                      <td className="min-w-[11rem] max-w-[22rem] px-3 py-4 align-middle">
+                      <td className="min-w-[9rem] sm:min-w-[11rem] max-w-[16rem] sm:max-w-[22rem] px-2 sm:px-3 py-4 align-middle">
                         <Link
                           href={`/books/${book._id}`}
-                          className="block truncate font-serif text-lg font-semibold leading-snug text-[#2d2a26] hover:underline dark:text-[#f0eae1]"
+                          className="block truncate font-serif text-base sm:text-lg font-semibold leading-snug text-[#2d2a26] hover:underline dark:text-[#f0eae1]"
                         >
                           {book.title}
                         </Link>
-                        <p className="truncate text-sm italic text-stone-600 dark:text-stone-400">
+                        <p className="truncate text-xs sm:text-sm italic text-stone-600 dark:text-stone-400">
                           {book.author}
                         </p>
-                        {/* shown here only when the Category column is hidden */}
-                        <span className="mt-1.5 inline-block rounded-[3px] border border-stone-300 px-2 py-0.5 text-xs text-stone-700 dark:border-stone-600 dark:text-stone-300 sm:hidden">
+                        {/* Mobile category badge */}
+                        <span className="mt-1 inline-block rounded-[3px] border border-stone-300 px-1.5 py-0.5 text-[10px] text-stone-700 dark:border-stone-600 dark:text-stone-300 sm:hidden">
                           {book.category}
                         </span>
                       </td>
@@ -366,7 +366,7 @@ export default function MyBooksClient({
                         </span>
                       </td>
 
-                      {/* Copies (text only) */}
+                      {/* Copies */}
                       <td className="hidden whitespace-nowrap px-3 py-4 align-middle text-sm text-stone-700 dark:text-stone-300 md:table-cell">
                         {copies} {copies === 1 ? "copy" : "copies"}
                       </td>
@@ -383,8 +383,8 @@ export default function MyBooksClient({
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 pl-3 pr-5 text-right align-middle sm:pr-7">
-                        <div className="inline-flex items-center gap-1">
+                      <td className="py-4 pl-2 sm:pl-3 pr-3 sm:pr-7 text-right align-middle">
+                        <div className="inline-flex items-center gap-0.5 sm:gap-1">
                           <button
                             type="button"
                             aria-label={`Edit ${book.title}`}
@@ -393,7 +393,7 @@ export default function MyBooksClient({
                               setSelectedEditFile(null);
                               setEditingBook(book);
                             }}
-                            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-[6px] px-3 text-sm font-medium text-[#3e342a] outline-none transition-colors hover:bg-[#3e342a]/10 focus-visible:ring-2 focus-visible:ring-[#8c6d46] dark:text-[#f0eae1] dark:hover:bg-white/10"
+                            className="inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-[6px] px-2 sm:px-3 text-xs sm:text-sm font-medium text-[#3e342a] outline-none transition-colors hover:bg-[#3e342a]/10 focus-visible:ring-2 focus-visible:ring-[#8c6d46] dark:text-[#f0eae1] dark:hover:bg-white/10"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline">Edit</span>
@@ -405,7 +405,7 @@ export default function MyBooksClient({
                               setError(null);
                               setBookToDelete(book);
                             }}
-                            className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-[6px] px-3 text-sm font-medium text-[#9b2f2a] outline-none transition-colors hover:bg-[#9b2f2a]/10 focus-visible:ring-2 focus-visible:ring-[#9b2f2a] dark:text-[#e58a84] dark:hover:bg-[#e58a84]/10"
+                            className="inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-[6px] px-2 sm:px-3 text-xs sm:text-sm font-medium text-[#9b2f2a] outline-none transition-colors hover:bg-[#9b2f2a]/10 focus-visible:ring-2 focus-visible:ring-[#9b2f2a] dark:text-[#e58a84] dark:hover:bg-[#e58a84]/10"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline">Delete</span>
@@ -421,13 +421,13 @@ export default function MyBooksClient({
         </section>
       )}
 
-      {/* ───────── Edit modal: a catalog card ───────── */}
+      {/* ───────── Edit modal ───────── */}
       {editingBook && (
         <Modal labelledBy="edit-title" onClose={closeEdit}>
           <div className="flex items-baseline justify-between gap-4 border-b-2 border-[#b4473f]/70 pb-2">
             <h2
               id="edit-title"
-              className="font-serif text-xl font-semibold text-[#2d2a26] dark:text-[#f0eae1]"
+              className="font-serif text-lg sm:text-xl font-semibold text-[#2d2a26] dark:text-[#f0eae1]"
             >
               Edit book
             </h2>
@@ -440,7 +440,7 @@ export default function MyBooksClient({
             </button>
           </div>
 
-          <form onSubmit={handleUpdateSubmit} className="mt-5 space-y-5">
+          <form onSubmit={handleUpdateSubmit} className="mt-5 space-y-4 sm:space-y-5">
             <div>
               <label htmlFor="edit-book-title" className={fieldLabel}>Title</label>
               <input
@@ -466,7 +466,7 @@ export default function MyBooksClient({
               />
             </div>
 
-            <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_6rem] gap-4 sm:gap-5">
               <div>
                 <label htmlFor="edit-book-category" className={fieldLabel}>Category</label>
                 <select
@@ -547,7 +547,7 @@ export default function MyBooksClient({
               </p>
             )}
 
-            <div className="flex items-center justify-end gap-2 border-t border-dashed border-stone-300 pt-5 dark:border-stone-700">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 border-t border-dashed border-stone-300 pt-5 dark:border-stone-700">
               <button
                 type="button"
                 onClick={closeEdit}
@@ -558,7 +558,7 @@ export default function MyBooksClient({
               <button
                 type="submit"
                 disabled={isUpdating}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md outline-none transition-[filter] hover:brightness-125 focus-visible:ring-2 focus-visible:ring-[#8c6d46] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#d4a373] dark:text-[#181614] dark:focus-visible:ring-offset-stone-900"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-[#3e342a] px-6 text-sm font-semibold text-[#faf8f5] shadow-md outline-none transition-[filter] hover:brightness-125 focus-visible:ring-2 focus-visible:ring-[#8c6d46] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#d4a373] dark:text-[#181614] dark:focus-visible:ring-offset-stone-900"
               >
                 {isUpdating && <Loader2 className="h-4 w-4 animate-spin" />}
                 {isUpdating ? "Saving" : "Save changes"}
@@ -574,7 +574,7 @@ export default function MyBooksClient({
           <div className="border-b-2 border-[#9b2f2a]/70 pb-2">
             <h2
               id="delete-title"
-              className="font-serif text-xl font-semibold text-[#2d2a26] dark:text-[#f0eae1]"
+              className="font-serif text-lg sm:text-xl font-semibold text-[#2d2a26] dark:text-[#f0eae1]"
             >
               Delete this book?
             </h2>
@@ -583,7 +583,7 @@ export default function MyBooksClient({
           <div className="mt-5 flex items-center gap-4">
             <MiniBook book={bookToDelete} className="h-[84px] w-16" />
             <div className="min-w-0">
-              <p className="font-serif text-lg font-semibold leading-snug text-[#2d2a26] line-clamp-2 dark:text-[#f0eae1]">
+              <p className="font-serif text-base sm:text-lg font-semibold leading-snug text-[#2d2a26] line-clamp-2 dark:text-[#f0eae1]">
                 {bookToDelete.title}
               </p>
               <p className="text-sm italic text-stone-600 dark:text-stone-400">
@@ -602,7 +602,7 @@ export default function MyBooksClient({
             </p>
           )}
 
-          <div className="mt-6 flex items-center justify-end gap-2 border-t border-dashed border-stone-300 pt-5 dark:border-stone-700">
+          <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 border-t border-dashed border-stone-300 pt-5 dark:border-stone-700">
             <button
               type="button"
               onClick={closeDelete}
@@ -615,7 +615,7 @@ export default function MyBooksClient({
               type="button"
               disabled={isDeleting}
               onClick={confirmDelete}
-              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-[6px] bg-[#9b2f2a] px-6 text-sm font-semibold text-white shadow-md outline-none transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[#9b2f2a] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-stone-900"
+              className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[6px] bg-[#9b2f2a] px-6 text-sm font-semibold text-white shadow-md outline-none transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[#9b2f2a] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-stone-900"
             >
               {isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

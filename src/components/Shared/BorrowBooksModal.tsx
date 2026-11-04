@@ -40,7 +40,6 @@ export default function BorrowModal({ book, cloth, foil }: BorrowModalProps) {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Calculate Dates: Borrow Date (Today) & Return Date (Today + 7 Days)
   const today = new Date();
   const returnDateObj = new Date();
   returnDateObj.setDate(today.getDate() + 7);
@@ -57,7 +56,6 @@ export default function BorrowModal({ book, cloth, foil }: BorrowModalProps) {
     year: "numeric",
   });
 
-  // Check if current user has already borrowed this specific book
   useEffect(() => {
     async function checkExistingBorrow() {
       if (!currentUser?.email || !book._id) {

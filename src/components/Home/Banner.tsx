@@ -132,13 +132,6 @@ export default function Banner() {
                       <span>{slide.buttonText}</span>
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
-
-                    <Link
-                      href="/books"
-                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[#e8e2d9]/30 bg-black/20 hover:bg-black/40 text-[#ffffff] font-medium text-sm backdrop-blur-sm transition font-sans"
-                    >
-                      View Catalog
-                    </Link>
                   </div>
                 </div>
               </div>

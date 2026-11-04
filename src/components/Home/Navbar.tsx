@@ -254,7 +254,7 @@ export default function Navbar() {
                     onClick={() => setIsProfileDropdownOpen(false)}
                     className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-[#625b52] dark:text-[#a89f91] hover:bg-[#f2ede4] dark:hover:bg-[#272320] transition"
                   >
-                    <User className="h-4 w-4 text-[#8c6d46] dark:text-[#d4a373]" /> My Profile Card
+                    <User className="h-4 w-4 text-[#8c6d46] dark:text-[#d4a373]" /> My Profile
                   </Link>
                   <button
                     onClick={handleSignOut}
@@ -386,7 +386,7 @@ export default function Navbar() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={getLinkClasses("/profile")}
                 >
-                  <User className="h-4 w-4" /> My Profile Card
+                  <User className="h-4 w-4" /> My Profile
                 </Link>
               </>
             )}

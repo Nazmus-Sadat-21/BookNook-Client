@@ -337,13 +337,15 @@ export default function AuthDialog({
           setTimeout(() => {
             setLoading(false);
             setSuccessMessage("");
-            setIsLogin(true); // Smoothly switches back to the Sign In view tab
+            setPassword(""); // Clear password field for security
+            setRepassword(""); // Clear confirm password field
+            setIsLogin(true); // Smoothly switches back to the Sign In view tab (email remains filled)
           }, 1200);
         }
       }
     } catch (err: unknown) {
       setErrorMessage(
-        err instanceof Error ? err.message : "An unexpected error occurred.",
+        err instanceof Error ? err.message : "An unexpected error occurred."
       );
     } finally {
       setLoading(false);
@@ -552,8 +554,8 @@ export default function AuthDialog({
                     ? "Signing in"
                     : "Creating account"
                   : isLogin
-                    ? "Sign In"
-                    : "Create account"}
+                  ? "Sign In"
+                  : "Create account"}
               </Button>
             </form>
 
